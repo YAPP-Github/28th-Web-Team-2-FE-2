@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # GITHUB_TOKEN을 git 설정에 심으면 push URL의 PAT를 덮어써서 fork push가 거부된다
+          persist-credentials: false
 
       # 원본 main이 진실 소스 — fork main은 미러라서 --force로 정확히 일치시킨다
       - name: Mirror push to fork
