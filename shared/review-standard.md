@@ -54,6 +54,21 @@
 - **예외: 와이어프레임/초안 산출물은 디자인 토큰 검사 면제**(코드 규칙은 적용)
 - 새 공통 컴포넌트에 `/playground` 스토리 누락
 
+## 완료 증명 (Verification — "됐다"는 말이 아니라 증거)
+
+작업 완료 보고는 **증거를 첨부**해야 인정된다. agent의 "완료했습니다" 주장만으로 닫지 않는다:
+
+- **빌드·타입체크**: `pnpm build` 실제 출력 (최종 1회 — conventions #6)
+- **테스트**: 실행 결과 요약 (실패 있으면 실패로 보고 — 가리지 않기)
+- **UI 변경**: `/playground` 스토리 추가 여부 + (가능하면) 스크린샷
+- **리뷰**: 푸시 전 code-reviewer 출력 (Critical 0 확인)
+- 스킵한 검증이 있으면 **스킵했다고 명시** (했다고 암시 금지)
+
+## 동기화 체크 (어댑터 drift 방지)
+
+- `.claude/agents/*.md` 변경 커밋에 `.codex/agents/*.toml` 재생성(`pnpm gen:codex`) 누락 → 🟡 flag
+- `shared/agent-roles.md` 표가 실제 agent와 어긋남 → 🟡 flag
+
 ## 탐지 패턴 (Grep — 기계적 1차 검출)
 
 - `: any` / `as any` → any 타입
