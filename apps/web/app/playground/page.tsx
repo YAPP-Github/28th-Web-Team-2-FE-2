@@ -1,9 +1,10 @@
 import { Button } from "@web2/design-system";
 import { notFound } from "next/navigation";
 
-// 내부 검증용 갤러리 — 프로덕션 번들에 노출 금지 (conventions: playground 프로덕션 제외)
+// 내부 검증용 갤러리 — 런칭 전까지 배포에서도 공개(팀 검증용 Vercel).
+// 실사용자 릴리즈 시 Vercel env에 PLAYGROUND_DISABLED=1 설정으로 숨긴다 (conventions 참조)
 export default function PlaygroundPage() {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.PLAYGROUND_DISABLED === "1") {
     notFound();
   }
 
