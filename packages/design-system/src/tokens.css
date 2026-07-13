@@ -2,9 +2,23 @@
  * 디자인 토큰 — 진실 소스는 Figma Variables (design-guide.md §0)
  * 이 파일은 figma-implementer가 Figma → sync로 갱신한다. 손으로 hex를 추가하지 말 것.
  * Figma에 없는 임의 플레이스홀더 금지 — sync된 규격만 등록한다.
- * TODO(✍️): 컬러 토큰 — Figma Variables 확정 시 sync로 추가
+ * 컬러 토큰은 사용하는 Figma 노드의 Variables를 확인한 뒤 필요한 범위만 sync한다.
  */
 @theme {
+  /*
+   * 컬러 — Figma section 395-9705 sync 2026-07-14
+   * `color/kakao/500`은 Tokens 컬렉션의 Variable이며 CTA_small fill(395-13199)에 연결돼 있다.
+   */
+  --color-white: #ffffff;
+  --color-gray-50: #f5f6fb;
+  --color-gray-200: #c2c6d1;
+  --color-gray-400: #626670;
+  --color-gray-800: #272e3f;
+  --color-gray-900: #0f172a;
+  --color-blue-400: #659bff;
+  --color-red-300: #ff5858;
+  --color-kakao-500: #fee500;
+
   /*
    * 타이포그래피 스케일 — Figma Variables (node 369-4075) sync 2026-07-13
    *   매핑 규칙: Figma `head-point1/26` → `--text-head1-26`,

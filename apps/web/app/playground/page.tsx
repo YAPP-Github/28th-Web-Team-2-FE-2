@@ -76,9 +76,21 @@ export default function PlaygroundPage() {
                       >
                         {s.title}
                       </h3>
-                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500">
-                        Figma {s.figma}
-                      </span>
+                      {s.figma.startsWith("https://") ? (
+                        <a
+                          href={s.figma}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${s.title} Figma 원본`}
+                          className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500 hover:text-neutral-900"
+                        >
+                          Figma 원본
+                        </a>
+                      ) : (
+                        <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500">
+                          Figma {s.figma}
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-neutral-500">
                       {s.description}
