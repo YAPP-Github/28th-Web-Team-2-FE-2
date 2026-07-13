@@ -15,7 +15,8 @@ const ctaVariants = cva(
       status: {
         default: "bg-gray-900",
         disabled: "bg-gray-200",
-        pressed: "bg-gray-800",
+        // 디자이너 승인 접근성 예외: blue/100 배경과 흰색 텍스트를 유지한다.
+        pressed: "bg-blue-100",
       },
     },
     defaultVariants: { status: "default" },

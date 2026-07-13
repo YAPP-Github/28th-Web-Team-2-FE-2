@@ -25,6 +25,10 @@ Figma `Looky Design`의 컴포넌트 섹션 `395:9705`에서 변경된 규격을
 
 Figma의 `discription` 표기는 디자이너가 오타라고 확인했다. 공개 API와 기본 문구는 올바른 `description`을 유지하며 오타를 코드에 동기화하지 않는다.
 
+### 접근성 예외
+
+CTA pressed의 `blue/100` 배경과 흰색 텍스트 대비는 약 1.31:1로 WCAG 2.2 AA 기준에 미달한다. 디자이너가 Figma 원형 유지를 명시적으로 승인했으므로 이번 동기화에서는 흰색 텍스트를 유지하며, 예외 결정을 `shared/domain.md`에 기록한다.
+
 ## 구현 범위
 
 - `packages/design-system/src/tokens.css`에 Figma Variable `blue/100`을 `--color-blue-100`으로 동기화

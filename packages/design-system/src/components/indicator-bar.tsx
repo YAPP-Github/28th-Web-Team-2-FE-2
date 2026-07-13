@@ -15,14 +15,14 @@ export function IndicatorBar({
   return (
     <div
       aria-hidden="true"
-      className={cn("flex h-1.5 w-10 items-center justify-between", className)}
+      className={cn("flex h-1.5 w-10 items-center gap-1.5", className)}
       {...props}
     >
       {([1, 2, 3] as const).map((item) => (
         <span
           className={cn(
             "h-1.5 rounded-full",
-            item === step ? "w-3.5 bg-gray-900" : "w-1.5 bg-gray-50",
+            item === step ? "w-4 bg-gray-900" : "w-1.5 bg-gray-50",
           )}
           key={item}
         />
