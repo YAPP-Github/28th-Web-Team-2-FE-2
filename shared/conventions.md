@@ -33,7 +33,7 @@
 - 폼: **react-hook-form + zod** (Server Actions와 병용 시 zod 스키마 공유)
 - 패키지 매니저: **pnpm** (workspace)
 - 테스트: **Vitest(유닛) + Playwright(E2E + `toHaveScreenshot` 시각 회귀 + axe a11y)**
-- 디자인 검증: **`apps/web/app/playground`** 갤러리 라우트 (스토리북 안 씀) — **프로덕션 빌드에서 제외** 필수
+- 디자인 검증: **`apps/web/app/playground`** 갤러리 라우트 (스토리북 안 씀) — **런칭 전까진 배포에서도 공개**(팀 검증용 Vercel이 보는 화면). 실사용자 릴리즈 시 Vercel env `PLAYGROUND_DISABLED=1`로 숨김 (`TODO(✍️):` 런칭 시점에 설정)
 - 디자인: **Figma + MCP**, 토큰은 Figma Variables → Tailwind v4 `@theme` 로 스냅샷 sync (`figma-bridge` 스킬)
 - 접근성: **WCAG 2.2 AA 목표** — Radix 기본기 + axe 자동 검사 + `accessibility` 스킬
 - 다국어: 안 함 (한국어 only)
