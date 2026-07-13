@@ -6,8 +6,15 @@
 ## 기본 흐름 (main 직접)
 
 ```
-작업 → 푸시 전 code-reviewer 1회 (Critical만 수정) → git pull --rebase origin main → git push origin main
+세션 시작(자동 pull) → 작업 → 푸시 전 code-reviewer 1회 (Critical만 수정) → git pull --rebase origin main → git push origin main
 ```
+
+## 세션 시작 = 자동 pull (전원 main 직접 푸시의 안전판)
+
+- **Claude Code 세션이 시작되면 `git pull --rebase --autostash origin main`이 자동 실행**된다 (`.claude/settings.json` SessionStart hook — 레포에 커밋돼 있어 팀 전원 동일 적용).
+- 낡은(stale) 상태로 작업을 시작해 푸시 시점에 히스토리가 갈라지는 사고를 원천 차단하는 습관 장치.
+- 자동 pull이 **실패**하면 세션에 ⚠️ 메시지가 뜬다 → 작업 시작 전에 충돌·네트워크부터 해결.
+- 터미널에서 직접 작업할 때도 같은 습관: **작업 시작 전 `git pull --rebase` 먼저.** (개인 편의: `git config pull.rebase true`, `git config rebase.autoStash true` 로컬 설정 권장)
 
 - **main 직접 커밋·푸시 허용.** 브랜치·PR은 의무가 아니다.
 - **푸시 전 리뷰 1회는 유지** — PR 게이트를 없앤 대신의 최소 안전판. "리뷰해줘" 한 번이면 됨. Critical만 고치고 나머지는 flag로 남겨도 된다.
