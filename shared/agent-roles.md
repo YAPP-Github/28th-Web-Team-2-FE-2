@@ -1,8 +1,9 @@
-# Agent 역할 정의 (단일 진실 소스 · 도구 무관)
+# Agent 역할 정의 (요약 카탈로그 · 도구 무관)
 
-> 여기가 **agent 역할의 진실 소스**다. Claude `.claude/agents/*.md` 와 Codex `.codex/agents/*.toml` 는
-> **이 문서에서 생성**한다. 역할을 바꾸면 여기부터 고치고 양쪽을 다시 생성한다.
-> **agent 커스텀은 디자이너 포함 전원 개방** — 추가·수정 시 이 문서를 같이 갱신할 것.
+> **SSOT 관계 (정직하게)**: 역할의 **상세 정의는 `.claude/agents/*.md`가 진실 소스**(사람이 편집),
+> `.codex/agents/*.toml`은 **`pnpm gen:codex`로 생성되는 어댑터**(직접 편집 금지),
+> 이 문서는 **한눈 요약 카탈로그**다 — agent를 추가·수정하면 ① `.claude/agents` 편집 ② `pnpm gen:codex` ③ 이 표 갱신을 **한 커밋에** 담는다.
+> **agent 커스텀은 디자이너 포함 전원 개방.**
 
 ## 판단 밀도 → 도구별 매핑 (Claude 5 시대 티어)
 
@@ -40,6 +41,10 @@
 > **와이어프레임 초안 예외**: wireframe-builder 산출물은 디자인 토큰 검사 면제(코드 규칙은 적용). design-reviewer 미적용. → `wireframe-drafting` 스킬.
 
 > **라이브러리 best-practice 스킬**: tailwind-v4·typescript-strict·nextjs-app-router(**RSC+BFF 기준으로 재작성됨**)·playwright-e2e·vitest·web-performance·accessibility·vercel-react-best-practices — 해당 구현/리뷰 agent에 연결.
+
+## 판단 렌즈 (agent가 아니라 관점)
+
+렌즈 = 기존 단계에 얹는 점검 관점 (실행 주체 아님). product-challenger→planner / ux→flow-reviewer / qa→test-writer / security→code-reviewer. 상세 표는 `CLAUDE.md` 판단 렌즈 절. L급 작업은 product-challenger·security 렌즈 필수.
 
 ## 전역 규칙 (모든 agent)
 
