@@ -32,6 +32,16 @@
 - **좌측 목차** — registry에 등록하면 자동으로 좌측(모바일은 상단) 목차에 잡힌다.
 - 스토리 내용 = 그 규격의 **모든 variant·state 나열** (타이포는 전 스케일, 컴포넌트는 variant × hover/disabled/loading 등).
 
+## 1-2. 외부 디자인 시스템 — Seed Design (프로토타입 탐색용, 2026-07-23 도입)
+
+당근의 디자인 시스템 **Seed Design**을 UT 프로토타입 실험용으로 도입했다(스킬 설치만 완료, 화면 구현은 별도 세션 예정).
+
+- **위치**: `npx skills add daangn/seed-design`로 설치 → `.agents/skills/seed-design/`(스킬 문서), `.claude/skills/seed-design`(심링크), `skills-lock.json`(버전 고정). 어댑터 구조는 `CLAUDE.md §어댑터·동기화` 참조. 직접 편집 금지 — `npx skills update`로만 갱신.
+- **용도 한정**: **UT 프로토타입/실험 참고용**이다. 격리 라우트에서만 쓰고, 정식 `packages/design-system`과 **혼용하지 않는다**.
+- **우선순위 (SSOT 충돌 방지)**: 이 프로젝트의 디자인 진실 소스는 **여전히 Figma Variables → `@theme`**. Seed Design은 *참고*일 뿐이며, `/playground` 스토리 규약(§1-1 "Figma에 있는 규격만")·토큰 화이트리스트와 충돌하면 **항상 Figma가 우선**한다. Seed 컴포넌트를 정식 DS로 승격하려면 별도 논의·리뷰 게이트가 필요하다.
+- **실 사용 참고**: 셋업·컴포넌트·토큰은 `seed-design` 스킬이 안내(`@seed-design/react`+`@seed-design/css`, `seed-design.json`). 문서: `https://seed-design.io`.
+- `TODO(✍️):` UT 시나리오 화면 구현 — 어떤 플로우/화면을 만들지 미정(다음 세션). 격리 라우트 예정.
+
 ## 2. 디자인 원칙
 
 - 확정: **모바일 퍼스트**, **WCAG 2.2 AA**, 상태 3종(로딩/에러/빈) 필수
