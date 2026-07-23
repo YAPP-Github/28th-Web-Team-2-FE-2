@@ -89,7 +89,7 @@
 
 ## 전용 플로우
 
-- **디자인 시스템 컴포넌트**(디자이너 바이브코딩): design-system-builder(Radix/shadcn 기반) → `/playground` 스토리 추가 → design-reviewer(시각·토큰·a11y) → 푸시 전 code-reviewer 1회
+- **디자인 시스템 컴포넌트**(디자이너 바이브코딩): design-system-builder(Radix/shadcn 기반) → `/playground` 스토리 추가 → 빌드 1회 → 푸시 전 리뷰 1회(code-reviewer가 토큰·a11y 겸함) → **바로 main 푸시. 여기서 끝** — 푸시하면 CI 자동 배포, 확인은 배포된 `/playground`. 테스트 작성·플랜 문서는 이 플로우 범위 밖(추후 test-writer 일괄). 상세 design-reviewer는 요청 시만
 - **와이어프레임 초안**(디자인 전): 유저 플로우 → flow-reviewer → [⏸] → wireframe-builder(더미 데이터·저충실도) → 배포(⏸) → 피드백. ※ 토큰 검사 면제, design-reviewer 미적용
 - **신규 화면**(디자인 확정 후): Figma 확정(⏸) → figma-implementer → design-reviewer + code-reviewer
 - **Bug**: bug-investigator(수정X) → 구현 agent → code-reviewer

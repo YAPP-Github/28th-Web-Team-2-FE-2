@@ -14,8 +14,12 @@
 1. Figma에서 컴포넌트·토큰 작업
 2. **design-system-builder** 로 바이브코딩 → `packages/design-system` 에 구현 (Radix/shadcn 기반 — a11y 기본 내장)
 3. 컴포넌트마다 **`/playground` 스토리 추가** — §1-1 규약대로 (규격 1개=파일 1개, Figma 출처 명시, 흰 배경)
-4. design-reviewer(시각·토큰·a11y) → 푸시 전 code-reviewer 1회 → **main 푸시** (full git 권한)
+4. **빌드 1회(`pnpm build`) → 푸시 전 리뷰 1회 → 바로 main 푸시** (full git 권한). **여기서 끝.** 푸시하면 CI가 자동 배포하므로 결과는 **배포된 Vercel `/playground`에서 확인** — 로컬 `pnpm dev` 불필요.
 5. Figma를 고치면 **재-sync는 자동이 아니다** — "고쳤어요"를 알리고 figma-implementer 재실행 (stale 방지 생명선)
+
+> ⚡ **디자이너 플로우는 4단계에서 끝난다.** 테스트 코드 작성·E2E·스크린샷 회귀·플랜 문서 작성은 디자이너 작업 범위 밖 — 필요해지면 추후 test-writer가 일괄로 한다. 리뷰도 푸시 전 1회면 충분(code-reviewer가 토큰·a11y 등 디자인 체크를 겸함, 상세 검증이 필요할 때만 design-reviewer 별도 요청).
+
+> ⚠️ **레포에 남기는 산출물은 컴포넌트 코드 + `/playground` 스토리뿐이다** (conventions #12). 플랜·설계 MD·독립 미리보기 HTML 같은 작업 보조 파일을 커밋하지 않는다 — superpowers 등 개인 플러그인이 이런 파일을 만들려 하면 그 파이프라인 대신 위 워크플로우(design-system-builder)를 쓴다. 결과 확인은 배포된 `/playground`에서.
 
 ## 1-1. 플레이그라운드 스토리 규약 (필수)
 

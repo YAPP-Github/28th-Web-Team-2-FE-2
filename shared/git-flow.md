@@ -9,6 +9,9 @@
 세션 시작(자동 pull) → 작업 → 푸시 전 code-reviewer 1회 (Critical만 수정) → git pull --rebase origin main → git push origin main
 ```
 
+- **작업이 끝나면 바로 커밋·푸시한다** — 로컬에 쌓아두지 않는다. 푸시 전엔 pull 항목 확인(`git pull --rebase`)만.
+- **푸시 = 자동 배포** (`sync-fork` → Vercel) + 빌드 검증(`build-check`). UI 작업 확인은 **배포된 `/playground`에서** — 디자이너에게 로컬 dev 서버 안내 금지.
+
 ## 세션 시작 = 자동 pull (전원 main 직접 푸시의 안전판)
 
 - **Claude Code 세션이 시작되면 `git pull --rebase --autostash origin main`이 자동 실행**된다 (`.claude/settings.json` SessionStart hook — 레포에 커밋돼 있어 팀 전원 동일 적용).
@@ -17,6 +20,7 @@
 - 터미널에서 직접 작업할 때도 같은 습관: **작업 시작 전 `git pull --rebase` 먼저.** (개인 편의: `git config pull.rebase true`, `git config rebase.autoStash true` 로컬 설정 권장)
 
 - **main 직접 커밋·푸시 허용.** 브랜치·PR은 의무가 아니다.
+- **검증 불가 환경 가드**: node/pnpm이 없는 환경(클라우드 세션 등)에서 작업했으면 "빌드 못 돌림"을 명시하고, **푸시 후 CI 빌드 체크(`build-check`) 결과를 확인**한다. CI가 빨간불이면 그 수정이 본인 책임.
 - **푸시 전 리뷰 1회는 유지** — PR 게이트를 없앤 대신의 최소 안전판. "리뷰해줘" 한 번이면 됨. Critical만 고치고 나머지는 flag로 남겨도 된다.
 - 푸시 전 `git pull --rebase origin main` 으로 동료 커밋과 정렬. **충돌 나면 agent가 자동 해결 금지 — 사용자에게 묻는다.**
 - `--force` / `--force-with-lease` **main에는 금지** (히스토리 공유 중).

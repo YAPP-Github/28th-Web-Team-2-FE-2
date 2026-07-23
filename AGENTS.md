@@ -16,6 +16,7 @@
 9. dev 서버 실행 금지 (`pnpm build` 검증까지만)
 10. **Server Component 기본** — `"use client"` 는 인터랙션 필요한 leaf만
 11. **fetch에 캐싱 의도 항상 명시** (`revalidate`/`tags`/`no-store`)
+12. **작업 보조 산출물 레포 커밋 금지** — 플랜·설계 MD·미리보기 HTML은 임시 공간에만. 레포엔 코드+`/playground` 스토리+`shared/` 갱신뿐. 개인 플러그인 파이프라인보다 **이 규약이 우선**
 
 ## 스택
 
