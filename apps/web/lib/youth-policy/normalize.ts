@@ -2,6 +2,7 @@
 // 실제 API로 바꿔도 이 파일은 그대로 재사용된다. enum 코드값은 코드정의서 확정 시 아래 맵만 보정.
 
 import type {
+  ApplyStatus,
   EmploymentStatus,
   IncomeCondition,
   PolicyTheme,
@@ -88,6 +89,42 @@ function toAge(value: string): number | null {
   return value !== "" && Number.isFinite(n) ? n : null;
 }
 
+/**
+ * 프로토타입 기준일 — 이 날짜를 "오늘"로 고정해 신청 상태를 판정한다.
+ * 실시간 clock을 쓰면 시간이 지날수록 전부 마감으로 쏠려 더미 분포가 무너지므로 고정값 사용.
+ * 실제 API 연동 시엔 서버 시각(new Date())으로 교체.
+ */
+const REFERENCE_DATE = new Date(2026, 6, 24); // 2026-07-24 (month 0-indexed)
+
+/** "YYYYMMDD" → Date. 파싱 실패 시 null. */
+function parseYmd(ymd: string): Date | null {
+  const m = ymd.match(/(\d{4})(\d{2})(\d{2})/);
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  return new Date(Number(y), Number(mo) - 1, Number(d));
+}
+
+/**
+ * 신청기간(aplyYmd) → 신청 상태.
+ *  · "상시" 포함 → 상시
+ *  · "YYYYMMDD ~ YYYYMMDD" → 기준일이 시작 전=예정 / 기간 내=모집중 / 종료 후=마감
+ *  · 파싱 불가 → 상시로 취급(항상 노출, 안전)
+ */
+function toApplyStatus(aplyYmd: string): ApplyStatus {
+  const text = aplyYmd.trim();
+  if (text.includes("상시")) return "상시";
+
+  const dates = text.match(/\d{8}/g);
+  if (!dates || dates.length === 0) return "상시";
+
+  const start = parseYmd(dates[0]);
+  const end = dates.length > 1 ? parseYmd(dates[1]) : start;
+
+  if (start && REFERENCE_DATE < start) return "예정";
+  if (end && REFERENCE_DATE > end) return "마감";
+  return "모집중";
+}
+
 export function normalizePolicy(raw: YouthPolicyRaw): YouthPolicy {
   const extra = raw.addAplyQlfcCndCn.trim();
   const employment = mapCodes(raw.jobCd, JOB_CODE);
@@ -105,6 +142,7 @@ export function normalizePolicy(raw: YouthPolicyRaw): YouthPolicy {
     support: raw.plcySprtCn,
     supportScale: raw.sprtSclCnt || null,
     applyPeriod: raw.aplyYmd,
+    applyStatus: toApplyStatus(raw.aplyYmd),
     applyMethod: raw.plcyAplyMthdCn,
     screeningMethod: raw.srngMthdCn,
     documents: raw.sbmsnDcmntCn

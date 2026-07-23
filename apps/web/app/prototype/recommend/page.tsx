@@ -11,7 +11,7 @@ import { getAllPolicies } from "@/lib/youth-policy/source";
 import { recommendPolicies, type RankedPolicy } from "@/lib/youth-policy/judge";
 import type { PolicyTheme } from "@/lib/youth-policy/types";
 import { usePrototypeSession } from "../_lib/session";
-import { Shell, THEME_ICON, VerdictBadge } from "../_lib/ui";
+import { ApplyStatusBadge, Shell, THEME_ICON, VerdictBadge } from "../_lib/ui";
 
 function PolicyCard({ ranked }: { ranked: RankedPolicy }) {
   const { policy, verdict } = ranked;
@@ -22,7 +22,10 @@ function PolicyCard({ ranked }: { ranked: RankedPolicy }) {
       className="flex flex-col gap-2 rounded-2xl border border-stroke-neutral-weak bg-bg-layer-default p-4 active:bg-bg-layer-default-pressed"
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="t2-medium text-fg-neutral-subtle">{policy.theme}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="t2-medium text-fg-neutral-subtle">{policy.theme}</span>
+          <ApplyStatusBadge status={policy.applyStatus} />
+        </div>
         <VerdictBadge verdict={verdict.verdict} />
       </div>
       <h3 className="t5-bold text-fg-neutral">{policy.name}</h3>

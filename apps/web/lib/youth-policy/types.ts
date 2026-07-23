@@ -67,6 +67,12 @@ export type PolicyTheme =
   | "복지문화"
   | "참여권리";
 
+/**
+ * 신청 상태 — aplyYmd(신청기간)를 프로토타입 기준일로 판정해 파생(normalize.ts).
+ * 온통청년 실데이터가 수만 건인 건 마감 공고가 누적된 탓이라, 더미도 마감/예정을 섞어 현실 분포를 재현한다.
+ */
+export type ApplyStatus = "모집중" | "마감" | "상시" | "예정";
+
 export type EmploymentStatus =
   | "재직자"
   | "미취업자"
@@ -112,6 +118,7 @@ export interface YouthPolicy {
   support: string;
   supportScale: string | null;
   applyPeriod: string;
+  applyStatus: ApplyStatus;
   applyMethod: string;
   screeningMethod: string;
   documents: string[];

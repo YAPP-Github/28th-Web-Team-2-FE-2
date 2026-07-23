@@ -6,7 +6,7 @@ import IconHouseFill from "@karrotmarket/react-monochrome-icon/IconHouseFill";
 import IconGraduationcapFill from "@karrotmarket/react-monochrome-icon/IconGraduationcapFill";
 import IconHeartFill from "@karrotmarket/react-monochrome-icon/IconHeartFill";
 import IconMegaphoneFill from "@karrotmarket/react-monochrome-icon/IconMegaphoneFill";
-import type { PolicyTheme, VerdictKind } from "@/lib/youth-policy/types";
+import type { ApplyStatus, PolicyTheme, VerdictKind } from "@/lib/youth-policy/types";
 
 // 카테고리 → SEED 모노크롬 아이콘 (칩·상세에서 공통 사용).
 export const THEME_ICON: Record<PolicyTheme, ReactNode> = {
@@ -48,6 +48,24 @@ export function VerdictBadge({ verdict }: { verdict: VerdictKind }) {
       className={`t2-bold inline-flex shrink-0 items-center rounded-full px-2.5 py-1 ${s.badge}`}
     >
       {s.label}
+    </span>
+  );
+}
+
+// 신청 상태 배지 — 마감/예정은 약하게(회색), 모집중·상시는 눈에 띄게.
+const APPLY_STATUS_STYLE: Record<ApplyStatus, string> = {
+  모집중: "bg-bg-positive-weak text-fg-positive",
+  상시: "bg-bg-informative-weak text-fg-informative",
+  예정: "bg-bg-warning-weak text-fg-warning",
+  마감: "bg-bg-neutral-weak text-fg-neutral-muted",
+};
+
+export function ApplyStatusBadge({ status }: { status: ApplyStatus }) {
+  return (
+    <span
+      className={`t1-medium inline-flex shrink-0 items-center rounded-full px-2 py-0.5 ${APPLY_STATUS_STYLE[status]}`}
+    >
+      {status}
     </span>
   );
 }
