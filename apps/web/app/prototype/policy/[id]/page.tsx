@@ -4,14 +4,14 @@
 import { useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Icon } from "@seed-design/react";
 import { ActionButton } from "seed-design/ui/action-button";
-import { Callout } from "seed-design/ui/callout";
 import { isCompleteProfile } from "@/lib/youth-policy/profile";
 import { judgePolicy } from "@/lib/youth-policy/judge";
 import { getPolicyById } from "@/lib/youth-policy/source";
 import type { VerdictKind } from "@/lib/youth-policy/types";
 import { usePrototypeSession } from "../../_lib/session";
-import { Shell, VerdictBadge, VERDICT_STYLE } from "../../_lib/ui";
+import { Shell, THEME_ICON, VERDICT_STYLE } from "../../_lib/ui";
 
 const RESULT_META: Record<VerdictKind, { dot: string; label: string }> = {
   해당: { dot: "bg-fg-positive", label: "해당" },
@@ -64,6 +64,7 @@ export default function PolicyDetailPage() {
     );
   }
 
+  const style = VERDICT_STYLE[verdict.verdict];
   const sortedReasons = [...verdict.reasons].sort(
     (a, b) => RESULT_ORDER[a.result] - RESULT_ORDER[b.result],
   );
@@ -71,7 +72,7 @@ export default function PolicyDetailPage() {
   return (
     <Shell
       title={policy.name}
-      description={`${policy.theme} · ${policy.sourceInstitution}`}
+      description={policy.sourceInstitution}
       footer={
         <div className="flex flex-col gap-2">
           {policy.applyUrl && (
@@ -88,16 +89,21 @@ export default function PolicyDetailPage() {
       }
     >
       <div className="flex flex-col gap-7">
-        {/* 판정 결과 */}
-        <section className="flex flex-col gap-3 rounded-2xl border border-stroke-neutral-weak p-4">
-          <div className="flex items-center gap-2">
-            <VerdictBadge verdict={verdict.verdict} />
-            <span className="t4-medium text-fg-neutral">{data.nickname}님 기준</span>
-          </div>
-          <Callout
-            title={VERDICT_STYLE[verdict.verdict].label}
-            description={VERDICT_STYLE[verdict.verdict].summary}
-          />
+        {/* 카테고리 */}
+        <div>
+          <span className="t3-medium inline-flex items-center gap-1 rounded-full bg-bg-layer-fill px-3 py-1 text-fg-neutral-subtle">
+            <Icon svg={THEME_ICON[policy.theme]} />
+            {policy.theme}
+          </span>
+        </div>
+
+        {/* 판정 히어로 */}
+        <section className={`flex flex-col gap-1 rounded-2xl p-5 ${style.panel}`}>
+          <p className="t7-bold text-fg-neutral">{style.label}</p>
+          <p className="t4-regular text-fg-neutral-subtle">{style.summary}</p>
+          <p className="t3-medium mt-1 text-fg-neutral-muted">
+            {data.nickname}님 입력 기준
+          </p>
         </section>
 
         {/* 판정 근거 (추적가능) */}

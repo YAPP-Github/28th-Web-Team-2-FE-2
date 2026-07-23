@@ -68,11 +68,15 @@ function toTheme(lclsfNm: string): PolicyTheme {
 function toIncome(raw: YouthPolicyRaw): IncomeCondition {
   switch (raw.earnCndSeCd) {
     case "0043002": {
-      const minWon = raw.earnMinAmt ? Number(raw.earnMinAmt) : null;
+      // 연소득 상한(원) → 세전 연소득 상한(만원)으로 자동 판정.
       const maxWon = raw.earnMaxAmt ? Number(raw.earnMaxAmt) : null;
-      return { kind: "범위", minWon, maxWon };
+      if (maxWon && Number.isFinite(maxWon)) {
+        return { kind: "세전연소득상한", maxManwon: Math.round(maxWon / 10000) };
+      }
+      return { kind: "기타", note: raw.earnEtcCn || "연소득 기준 있음" };
     }
     case "0043003":
+      // 가구 중위소득 % 등 — 온통청년에서 자유텍스트로 오는 조건(자동 확정 불가).
       return { kind: "기타", note: raw.earnEtcCn || "별도 소득기준 있음" };
     default:
       return { kind: "무관" };

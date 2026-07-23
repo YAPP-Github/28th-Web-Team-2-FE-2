@@ -78,7 +78,9 @@ export type EmploymentStatus =
 
 export type IncomeCondition =
   | { kind: "무관" }
-  | { kind: "범위"; minWon: number | null; maxWon: number | null }
+  // 세전 연소득 상한(만원)으로 자동 판정 가능한 조건.
+  | { kind: "세전연소득상한"; maxManwon: number }
+  // 가구 기준 중위소득 % 등 자유텍스트 조건 — 자동 확정 불가(조건부).
   | { kind: "기타"; note: string };
 
 export interface EligibilityCriteria {

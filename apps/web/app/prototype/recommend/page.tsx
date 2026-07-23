@@ -11,7 +11,7 @@ import { getAllPolicies } from "@/lib/youth-policy/source";
 import { recommendPolicies, type RankedPolicy } from "@/lib/youth-policy/judge";
 import type { PolicyTheme } from "@/lib/youth-policy/types";
 import { usePrototypeSession } from "../_lib/session";
-import { Shell, VerdictBadge } from "../_lib/ui";
+import { Shell, THEME_ICON, VerdictBadge } from "../_lib/ui";
 
 function PolicyCard({ ranked }: { ranked: RankedPolicy }) {
   const { policy, verdict } = ranked;
@@ -108,6 +108,7 @@ export default function RecommendPage() {
                 checked={cats.includes(theme)}
                 onCheckedChange={(checked) => toggleCat(theme, checked)}
               >
+                <Chip.PrefixIcon>{THEME_ICON[theme]}</Chip.PrefixIcon>
                 <Chip.Label>{theme}</Chip.Label>
               </Chip.Toggle>
             ))}

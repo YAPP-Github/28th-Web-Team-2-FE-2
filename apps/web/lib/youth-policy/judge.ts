@@ -10,13 +10,12 @@
 
 import type {
   EligibilityCriteria,
-  IncomeCondition,
   PolicyVerdict,
   VerdictKind,
   VerdictReason,
   YouthPolicy,
 } from "@/lib/youth-policy/types";
-import { incomeBandRange, type UserProfile } from "@/lib/youth-policy/profile";
+import type { UserProfile } from "@/lib/youth-policy/profile";
 
 function ageRangeText(e: EligibilityCriteria): string {
   const min = e.ageMin !== null ? `만 ${e.ageMin}세` : "";
@@ -27,13 +26,10 @@ function ageRangeText(e: EligibilityCriteria): string {
   return "연령 무관";
 }
 
-function incomeRangeText(income: Extract<IncomeCondition, { kind: "범위" }>): string {
-  const toManwon = (won: number) => `${Math.round(won / 10_000).toLocaleString()}만원`;
-  if (income.minWon !== null && income.maxWon !== null)
-    return `연 ${toManwon(income.minWon)}~${toManwon(income.maxWon)}`;
-  if (income.maxWon !== null) return `연 ${toManwon(income.maxWon)} 이하`;
-  if (income.minWon !== null) return `연 ${toManwon(income.minWon)} 이상`;
-  return "소득 기준 있음";
+function myRegionText(profile: UserProfile): string {
+  return profile.regionSigungu
+    ? `${profile.regionSido} ${profile.regionSigungu}`
+    : profile.regionSido;
 }
 
 export function judgePolicy(policy: YouthPolicy, profile: UserProfile): PolicyVerdict {
@@ -51,12 +47,16 @@ export function judgePolicy(policy: YouthPolicy, profile: UserProfile): PolicyVe
     );
   }
 
-  // 지역
+  // 지역 — 정책 지역이 내 시/도(또는 시/도 시/군/구)와 일치하는지.
   if (e.regions.length > 0) {
+    const full = `${profile.regionSido} ${profile.regionSigungu}`.trim();
+    const match = e.regions.some(
+      (r) => r === profile.regionSido || r === full,
+    );
     reasons.push(
-      e.regions.includes(profile.region)
+      match
         ? { axis: "지역", result: "해당", detail: `${e.regions.join(", ")} 거주자 대상` }
-        : { axis: "지역", result: "비해당", detail: `${e.regions.join(", ")} 거주자만 대상 · 내 지역 ${profile.region}` },
+        : { axis: "지역", result: "비해당", detail: `${e.regions.join(", ")} 거주자만 대상 · 내 지역 ${myRegionText(profile)}` },
     );
   }
 
@@ -69,28 +69,22 @@ export function judgePolicy(policy: YouthPolicy, profile: UserProfile): PolicyVe
     );
   }
 
-  // 소득 — 사용자의 소득 "구간"과 정책 기준의 겹침으로 판정.
-  //   구간이 정책 범위에 완전히 들어가면 해당, 완전히 벗어나면 비해당,
-  //   걸쳐 있으면(대표값이면 오답 났을 지점) 조건부로 남겨 유저가 확인하게 한다.
-  if (e.income.kind === "범위") {
-    const band = incomeBandRange(profile.incomeBand);
-    if (band === null) {
-      reasons.push({ axis: "소득", result: "조건부", detail: `소득 기준(${incomeRangeText(e.income)}) 있음 · 소득 정보를 입력하지 않음` });
-    } else {
-      const polMin = e.income.minWon ?? 0;
-      const polMax = e.income.maxWon ?? Number.POSITIVE_INFINITY;
-      const within = band.minWon >= polMin && band.maxWon <= polMax;
-      const noOverlap = band.maxWon < polMin || band.minWon > polMax;
-      reasons.push(
-        within
-          ? { axis: "소득", result: "해당", detail: `소득 기준 ${incomeRangeText(e.income)} 충족` }
-          : noOverlap
-            ? { axis: "소득", result: "비해당", detail: `소득 기준 ${incomeRangeText(e.income)} · 내 소득 구간이 벗어남` }
-            : { axis: "소득", result: "조건부", detail: `소득 기준 ${incomeRangeText(e.income)} · 내 소득 구간과 걸쳐 있어 실제 소득 확인 필요` },
-      );
-    }
+  // 소득 — 기준을 명확히: 사용자 입력은 "세전 연소득(만원)".
+  //   세전연소득상한: 자동 판정(해당/비해당). 기타(가구 중위소득 등): 자동 확정 불가 → 조건부.
+  if (e.income.kind === "세전연소득상한") {
+    const my = profile.annualIncomeManwon.toLocaleString();
+    const cap = e.income.maxManwon.toLocaleString();
+    reasons.push(
+      profile.annualIncomeManwon <= e.income.maxManwon
+        ? { axis: "소득", result: "해당", detail: `세전 연소득 ${cap}만원 이하 대상 · 내 세전 연소득 ${my}만원` }
+        : { axis: "소득", result: "비해당", detail: `세전 연소득 ${cap}만원 이하 대상 · 내 세전 연소득 ${my}만원` },
+    );
   } else if (e.income.kind === "기타") {
-    reasons.push({ axis: "소득", result: "조건부", detail: `소득 조건: ${e.income.note}` });
+    reasons.push({
+      axis: "소득",
+      result: "조건부",
+      detail: `${e.income.note} — 세전 연소득이 아니라 가구 기준 중위소득 등으로 판정하므로 직접 확인 필요`,
+    });
   }
 
   // 학력

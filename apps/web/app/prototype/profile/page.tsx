@@ -1,22 +1,20 @@
 "use client";
 
-// 개인정보 온보딩 — 4스텝 위저드. 카테고리(관심 테마)는 여기서 안 고른다(결과 필터로 이동).
+// 개인정보 온보딩 — 4스텝 위저드. 카테고리는 여기서 안 고른다(결과 필터로 이동).
+// select류는 SEED FieldButton+BottomSheet(SelectField), 소득은 기준 명확한 세전 연소득 입력.
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ActionButton } from "seed-design/ui/action-button";
 import { TextField, TextFieldInput } from "seed-design/ui/text-field";
-import { RadioGroup, RadioGroupItem } from "seed-design/ui/radio-group";
 import {
   EDUCATION_OPTIONS,
   EMPLOYMENT_OPTIONS,
-  INCOME_OPTIONS,
-  REGION_OPTIONS,
   type EducationChoice,
   type EmploymentChoice,
-  type IncomeBand,
-  type RegionChoice,
 } from "@/lib/youth-policy/profile";
+import { SIDO_NAMES, getDistricts } from "@/lib/youth-policy/regions";
 import { usePrototypeSession } from "../_lib/session";
+import { SelectField } from "../_lib/select-field";
 import { Shell } from "../_lib/ui";
 
 const TOTAL_STEPS = 4;
@@ -25,7 +23,7 @@ const STEP_META = [
   { title: "나이가 어떻게 되세요?", description: "만 나이로 알려주세요. 대부분 정책이 연령으로 대상을 가려요." },
   { title: "어디에 사세요?", description: "지역 한정 정책을 가려내는 데 써요." },
   { title: "지금 어떤 상태예요?", description: "고용 형태에 따라 대상 여부가 달라져요." },
-  { title: "소득과 학력을 알려주세요", description: "정밀 판정에 쓰여요. 소득은 모르면 '무관'으로." },
+  { title: "소득과 학력을 알려주세요", description: "소득은 세전 연소득 기준이에요." },
 ] as const;
 
 export default function OnboardingPage() {
@@ -34,13 +32,13 @@ export default function OnboardingPage() {
 
   const [step, setStep] = useState(1);
   const [age, setAge] = useState("");
-  const [region, setRegion] = useState<RegionChoice | "">("");
+  const [regionSido, setRegionSido] = useState("");
+  const [regionSigungu, setRegionSigungu] = useState("");
   const [employment, setEmployment] = useState<EmploymentChoice | "">("");
-  const [incomeBand, setIncomeBand] = useState<IncomeBand | "">("");
+  const [income, setIncome] = useState(""); // 세전 연소득(만원)
   const [education, setEducation] = useState<EducationChoice | "">("");
 
-  // 세션 복원은 최초 1회만 — data가 update()로 바뀔 때마다 재실행하면
-  // 미저장 스텝의 입력을 세션값으로 되돌려버린다.
+  // 세션 복원은 최초 1회만 (매 update()마다 재실행하면 미저장 입력이 되돌아감).
   const restored = useRef(false);
   useEffect(() => {
     if (!loaded || restored.current) return;
@@ -50,23 +48,27 @@ export default function OnboardingPage() {
     }
     restored.current = true;
     if (typeof data.age === "number") setAge(String(data.age));
-    if (data.region) setRegion(data.region);
+    if (data.regionSido) setRegionSido(data.regionSido);
+    if (data.regionSigungu) setRegionSigungu(data.regionSigungu);
     if (data.employment) setEmployment(data.employment);
-    if (data.incomeBand) setIncomeBand(data.incomeBand);
+    if (typeof data.annualIncomeManwon === "number") setIncome(String(data.annualIncomeManwon));
     if (data.education) setEducation(data.education);
   }, [loaded, data, router]);
 
   const ageNum = Number(age);
   const ageValid = age !== "" && Number.isFinite(ageNum) && ageNum > 0 && ageNum < 120;
+  const districts = getDistricts(regionSido);
+  const regionValid = !!regionSido && (districts.length === 0 || !!regionSigungu);
+  const incomeValid = income !== "" && Number.isFinite(Number(income));
 
   const stepValid =
     step === 1
       ? ageValid
       : step === 2
-        ? !!region
+        ? regionValid
         : step === 3
           ? !!employment
-          : !!incomeBand && !!education;
+          : incomeValid && !!education;
 
   const handleBack = () => {
     if (step === 1) router.push("/prototype");
@@ -75,13 +77,12 @@ export default function OnboardingPage() {
 
   const handleNext = () => {
     if (!stepValid) return;
-    // 스텝별로 세션에 저장 → 새로고침·뒤로가기에도 유지
     if (step === 1) update({ age: ageNum });
-    if (step === 2) update({ region: region as RegionChoice });
+    if (step === 2) update({ regionSido, regionSigungu });
     if (step === 3) update({ employment: employment as EmploymentChoice });
     if (step === 4) {
       update({
-        incomeBand: incomeBand as IncomeBand,
+        annualIncomeManwon: Number(income),
         education: education as EducationChoice,
       });
       router.push("/prototype/recommend");
@@ -120,51 +121,58 @@ export default function OnboardingPage() {
       )}
 
       {step === 2 && (
-        <RadioGroup
-          label="거주 지역"
-          value={region}
-          onValueChange={(v) => setRegion(v as RegionChoice)}
-        >
-          {REGION_OPTIONS.map((o) => (
-            <RadioGroupItem key={o} value={o} label={o} />
-          ))}
-        </RadioGroup>
+        <div className="flex flex-col gap-6">
+          <SelectField
+            label="시 / 도"
+            placeholder="시/도를 선택하세요"
+            value={regionSido}
+            options={SIDO_NAMES}
+            onChange={(v) => {
+              setRegionSido(v);
+              setRegionSigungu(""); // 시/도 바뀌면 하위 초기화
+            }}
+          />
+          {regionSido && districts.length > 0 && (
+            <SelectField
+              label="시 / 군 / 구"
+              placeholder="시/군/구를 선택하세요"
+              value={regionSigungu}
+              options={districts}
+              onChange={setRegionSigungu}
+            />
+          )}
+        </div>
       )}
 
       {step === 3 && (
-        <RadioGroup
+        <SelectField
           label="현재 상태"
+          placeholder="고용 형태를 선택하세요"
           value={employment}
-          onValueChange={(v) => setEmployment(v as EmploymentChoice)}
-        >
-          {EMPLOYMENT_OPTIONS.map((o) => (
-            <RadioGroupItem key={o} value={o} label={o} />
-          ))}
-        </RadioGroup>
+          options={EMPLOYMENT_OPTIONS}
+          onChange={(v) => setEmployment(v as EmploymentChoice)}
+        />
       )}
 
       {step === 4 && (
         <div className="flex flex-col gap-7">
-          <RadioGroup
-            label="연 소득 구간"
-            description="모르면 '무관'을 골라도 돼요."
-            value={incomeBand}
-            onValueChange={(v) => setIncomeBand(v as IncomeBand)}
+          <TextField
+            label="세전 연소득"
+            description="세금 떼기 전 1년 총소득(상여 포함), 본인 기준이에요. 소득이 없으면 0을 입력하세요."
+            value={income}
+            onValueChange={({ value }) => setIncome(value.replace(/[^0-9]/g, ""))}
+            suffix="만원"
           >
-            {INCOME_OPTIONS.map((o) => (
-              <RadioGroupItem key={o.value} value={o.value} label={o.label} />
-            ))}
-          </RadioGroup>
+            <TextFieldInput inputMode="numeric" placeholder="예: 3000" />
+          </TextField>
 
-          <RadioGroup
+          <SelectField
             label="학력"
+            placeholder="학력을 선택하세요"
             value={education}
-            onValueChange={(v) => setEducation(v as EducationChoice)}
-          >
-            {EDUCATION_OPTIONS.map((o) => (
-              <RadioGroupItem key={o} value={o} label={o} />
-            ))}
-          </RadioGroup>
+            options={EDUCATION_OPTIONS}
+            onChange={(v) => setEducation(v as EducationChoice)}
+          />
         </div>
       )}
     </Shell>

@@ -1,25 +1,42 @@
 // UT 프로토타입 공용 프레젠테이션 요소 (훅 없음). SEED 시맨틱 색·타이포 토큰 사용.
 
 import type { ReactNode } from "react";
-import type { VerdictKind } from "@/lib/youth-policy/types";
+import IconLaptopFill from "@karrotmarket/react-monochrome-icon/IconLaptopFill";
+import IconHouseFill from "@karrotmarket/react-monochrome-icon/IconHouseFill";
+import IconGraduationcapFill from "@karrotmarket/react-monochrome-icon/IconGraduationcapFill";
+import IconHeartFill from "@karrotmarket/react-monochrome-icon/IconHeartFill";
+import IconMegaphoneFill from "@karrotmarket/react-monochrome-icon/IconMegaphoneFill";
+import type { PolicyTheme, VerdictKind } from "@/lib/youth-policy/types";
+
+// 카테고리 → SEED 모노크롬 아이콘 (칩·상세에서 공통 사용).
+export const THEME_ICON: Record<PolicyTheme, ReactNode> = {
+  일자리: <IconLaptopFill />,
+  주거: <IconHouseFill />,
+  교육: <IconGraduationcapFill />,
+  복지문화: <IconHeartFill />,
+  참여권리: <IconMegaphoneFill />,
+};
 
 export const VERDICT_STYLE: Record<
   VerdictKind,
-  { label: string; badge: string; summary: string }
+  { label: string; badge: string; panel: string; summary: string }
 > = {
   해당: {
     label: "받을 수 있어요",
     badge: "bg-bg-positive-weak text-fg-positive",
+    panel: "bg-bg-positive-weak",
     summary: "입력한 조건으로는 대상에 해당해요.",
   },
   조건부: {
     label: "조건 확인 필요",
     badge: "bg-bg-warning-weak text-fg-warning",
+    panel: "bg-bg-warning-weak",
     summary: "자동으로 확정할 수 없는 조건이 있어요. 근거를 보고 직접 판단하세요.",
   },
   비해당: {
     label: "대상이 아니에요",
     badge: "bg-bg-neutral-weak text-fg-neutral-subtle",
+    panel: "bg-bg-neutral-weak",
     summary: "입력한 조건으로는 대상에서 벗어나요.",
   },
 };
