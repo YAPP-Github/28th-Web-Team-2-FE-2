@@ -71,42 +71,44 @@ export function Shell({
   children,
   footer,
 }: ShellProps) {
-  // 프레임 폭 = iPhone 12 Pro 논리 해상도 390pt (UT 기준 기기).
+  // 프레임 = iPhone 12 Pro 논리 해상도 390 × 844pt (UT 기준 기기).
   return (
-    <main
-      className="mx-auto flex min-h-screen w-full flex-col bg-bg-layer-default"
-      style={{ maxWidth: 390 }}
-    >
-      <div className="flex flex-1 flex-col gap-6 px-5 pt-6 pb-28">
-        {step !== undefined && totalSteps !== undefined && (
-          <>
-            {/* 시각 진행바는 장식(aria-hidden), 스크린리더에는 텍스트로 단계 안내 */}
-            <p className="sr-only">
-              {totalSteps}단계 중 {step}단계
-            </p>
-            <div className="flex items-center gap-1.5" aria-hidden="true">
-              {Array.from({ length: totalSteps }, (_, i) => (
-                <span
-                  key={i}
-                  className={`h-1 flex-1 rounded-full ${i < step ? "bg-bg-neutral-solid" : "bg-bg-neutral-weak"}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
-        <header className="flex flex-col gap-2">
-          <h1 className="t8-bold text-fg-neutral">{title}</h1>
-          {description && (
-            <p className="t4-regular text-fg-neutral-subtle">{description}</p>
+    <div className="flex min-h-screen justify-center bg-bg-neutral-weak md:items-center md:py-8">
+      <main
+        className="flex w-full flex-col overflow-hidden bg-bg-layer-default md:rounded-3xl md:shadow-xl"
+        style={{ maxWidth: 390, height: 844 }}
+      >
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 pt-6 pb-28">
+          {step !== undefined && totalSteps !== undefined && (
+            <>
+              {/* 시각 진행바는 장식(aria-hidden), 스크린리더에는 텍스트로 단계 안내 */}
+              <p className="sr-only">
+                {totalSteps}단계 중 {step}단계
+              </p>
+              <div className="flex items-center gap-1.5" aria-hidden="true">
+                {Array.from({ length: totalSteps }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`h-1 flex-1 rounded-full ${i < step ? "bg-bg-neutral-solid" : "bg-bg-neutral-weak"}`}
+                  />
+                ))}
+              </div>
+            </>
           )}
-        </header>
-        {children}
-      </div>
-      {footer && (
-        <div className="sticky bottom-0 border-t border-stroke-neutral-weak bg-bg-layer-default px-5 py-4">
-          {footer}
+          <header className="flex flex-col gap-2">
+            <h1 className="t8-bold text-fg-neutral">{title}</h1>
+            {description && (
+              <p className="t4-regular text-fg-neutral-subtle">{description}</p>
+            )}
+          </header>
+          {children}
         </div>
-      )}
-    </main>
+        {footer && (
+          <div className="border-t border-stroke-neutral-weak bg-bg-layer-default px-5 py-4">
+            {footer}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
