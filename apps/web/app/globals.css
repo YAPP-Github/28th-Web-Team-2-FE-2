@@ -1,4 +1,9 @@
+/* Seed Design(UT 프로토타입용, design-guide §1-2) + Tailwind v4 공존 — cascade layer 순서로 우선순위 결정.
+   SEED 스타일은 seed-* 레이어에, Tailwind 유틸리티는 utilities 레이어에 놓여 충돌 없이 얹힌다. */
+@layer theme, base, seed-base, components, seed-components, utilities;
+@import "@seed-design/css/all.layered.css";
 @import "tailwindcss";
+@import "@seed-design/tailwind4-theme";
 @import "@web2/design-system/tokens.css";
 @source "../../../packages/design-system/src";
 

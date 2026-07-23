@@ -24,6 +24,9 @@ export default function RootLayout({
     <html
       lang="ko"
       className={`${pretendard.variable} h-full antialiased`}
+      // Seed Design 테마 속성 — 번들러 플러그인 없이 수동 지정 (design-guide §1-2)
+      data-seed-color-mode="light-only"
+      data-seed-user-color-scheme="light"
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

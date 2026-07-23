@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@karrotmarket/react-monochrome-icon": "^1.24.0",
+    "@seed-design/css": "^2.2.1",
+    "@seed-design/react": "^2.0.3",
+    "@seed-design/tailwind4-theme": "^2.2.0",
     "@web2/design-system": "workspace:*",
     "next": "16.2.10",
     "react": "19.2.4",
