@@ -7,7 +7,7 @@ export interface Vegetable {
   id: string;
   /** 표시명. 예: "감자" */
   name: string;
-  /** Figma에서 추출한 야채 일러스트 경로 (public). 예: "/veg/potato.png" */
+  /** Figma에서 추출한 야채 일러스트 경로 (public). 예: "/veg/potato.svg" */
   image: string;
   /** 이미지 로드 전/대체용 이모지 */
   emoji: string;

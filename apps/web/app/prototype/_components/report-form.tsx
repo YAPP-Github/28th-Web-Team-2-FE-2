@@ -46,7 +46,7 @@ export function ReportForm({ item, method }: { item: string; method: Report["met
               <br />
               알려주세요
             </h1>
-            <Image src="/ui/cart.png" alt="" width={80} height={70} className="mt-1 h-16 w-auto shrink-0 object-contain" />
+            <Image src="/ui/cart.svg" alt="" width={99} height={97} className="mt-1 h-16 w-auto shrink-0 object-contain" />
           </div>
 
           <div className="mt-8 flex flex-col gap-6">
