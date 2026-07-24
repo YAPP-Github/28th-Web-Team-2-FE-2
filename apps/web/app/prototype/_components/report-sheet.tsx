@@ -14,7 +14,7 @@ export function ReportSheet({ vegetableId }: { vegetableId: string }) {
   return (
     <BottomSheetRoot>
       <BottomSheetTrigger asChild>
-        <ActionButton variant="brandSolid" size="large" className="w-full">
+        <ActionButton variant="neutralSolid" size="large" className="w-full">
           제보하기
         </ActionButton>
       </BottomSheetTrigger>

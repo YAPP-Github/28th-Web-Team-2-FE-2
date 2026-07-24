@@ -1,23 +1,17 @@
 import Link from "next/link";
-import IconLocationpinFill from "@karrotmarket/react-monochrome-icon/IconLocationpinFill";
 import IconCameraFill from "@karrotmarket/react-monochrome-icon/IconCameraFill";
 import { PhoneFrame, Scroll, StatusBar } from "./_lib/shell";
 import { HomeVegetables } from "./_components/home-vegetables";
-import { DEFAULT_DISTRICT } from "./_lib/vegetables";
+import { LocationLabel } from "./_components/location-label";
 
-// F01 홈 — 위치·검색·인기 야채. 데이터가 정적이라 Server Component; 검색만 클라 leaf.
+// F01 홈 — 위치(GPS)·검색·인기 야채. RSC 기본; 위치·검색만 클라 leaf.
 export default function HomePage() {
   return (
     <PhoneFrame>
       <StatusBar />
       <Scroll className="pb-28">
         <div className="flex flex-col gap-5 px-4 pt-1">
-          <div className="flex items-center gap-1 text-fg-neutral">
-            <span className="text-fg-brand [&_svg]:size-6" aria-hidden="true">
-              <IconLocationpinFill />
-            </span>
-            <span className="text-head2-16">{DEFAULT_DISTRICT}</span>
-          </div>
+          <LocationLabel />
           <HomeVegetables />
         </div>
       </Scroll>

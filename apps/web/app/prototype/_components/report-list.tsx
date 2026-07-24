@@ -1,19 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import IconLocationpinFill from "@karrotmarket/react-monochrome-icon/IconLocationpinFill";
 import { useReports } from "../_lib/reports-store";
+import { useCurrentDistrict } from "../_lib/location";
 import { formatDateDot, formatNumber } from "../_lib/format";
 
 const PREVIEW_COUNT = 3;
 
-/** 헤더의 "최근 제보된 실제가" — 최신 제보값. 제보가 없으면 시세로 위장하지 않고 명시. */
-export function LatestReportPrice({
-  vegetableId,
-  district,
-}: {
-  vegetableId: string;
-  district: string;
-}) {
+/** 현재 자치구 배지 (사용자 제보 실제가 헤더). */
+export function DistrictBadge() {
+  const { district } = useCurrentDistrict();
+  return (
+    <span className="flex items-center gap-0.5 text-body-14-regular text-fg-neutral-subtle">
+      <span className="text-fg-brand [&_svg]:size-4" aria-hidden="true">
+        <IconLocationpinFill />
+      </span>
+      {district}
+    </span>
+  );
+}
+
+/** 헤더의 "최근 제보된 실제가" — 최신 제보값. 없으면 시세로 위장하지 않고 명시. */
+export function LatestReportPrice({ vegetableId }: { vegetableId: string }) {
+  const { district } = useCurrentDistrict();
   const reports = useReports({ vegetableId, district });
   const latest = reports[0];
   if (!latest) {
@@ -24,14 +34,9 @@ export function LatestReportPrice({
   );
 }
 
-/** 사용자 제보 실제가 리스트 (크라우드소싱 결과). */
-export function ReportsList({
-  vegetableId,
-  district,
-}: {
-  vegetableId: string;
-  district: string;
-}) {
+/** 사용자 제보 실제가 리스트 (크라우드소싱 결과, 현재 자치구 기준). */
+export function ReportsList({ vegetableId }: { vegetableId: string }) {
+  const { district } = useCurrentDistrict();
   const reports = useReports({ vegetableId, district });
   const [expanded, setExpanded] = useState(false);
 
