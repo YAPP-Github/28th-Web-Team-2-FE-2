@@ -13,7 +13,7 @@
 6. 빌드는 최종 1회만
 7. 시크릿/키 클라이언트 노출 금지 — **BFF(서버)까지만**
 8. React hooks는 early return 앞에
-9. dev 서버 실행 금지 (`pnpm build` 검증까지만)
+9. 평상시 dev 서버 상시 실행 금지. Playwright·브라우저 QA 때만 임시 실행하고 종료
 10. **Server Component 기본** — `"use client"` 는 인터랙션 필요한 leaf만
 11. **fetch에 캐싱 의도 항상 명시** (`revalidate`/`tags`/`no-store`)
 12. **작업 보조 산출물 레포 커밋 금지** — 플랜·설계 MD·미리보기 HTML은 임시 공간에만. 레포엔 코드+`/playground` 스토리+`shared/` 갱신뿐. 개인 플러그인 파이프라인보다 **이 규약이 우선**
@@ -38,7 +38,7 @@ Tailwind v4 / shadcn(Radix) / rhf+zod / Vitest+Playwright(스크린샷 회귀+ax
 
 ## Git (shared/git-flow.md)
 
-**main 직접 커밋·푸시 허용, PR 최소화.** 푸시 전 리뷰 1회 + `git pull --rebase origin main`(충돌 시 사용자에게 묻기). main force push 금지. RSC/BFF 경계 변경·위험 경로만 PR 권장. 커밋 형식 `feat|fix|design|refactor|chore|style|docs(scope): 한국어 설명`.
+**`main`=릴리스, `dev`=통합.** 최신 `dev`에서 작업 브랜치를 만들고 `dev` 대상 PR로만 합친다. `main`·`dev` 직접 push와 force push 금지. 충돌은 사용자에게 보고한다. 커밋 형식 `feat|fix|design|refactor|chore|style|docs|test(scope): 한국어 설명`.
 
 **커밋은 최대한 잘게 (2026-08-18)** — 타입 하나·함수 하나·캐싱 옵션 하나·상태 하나가 각각 커밋이고, 기능 하나는 보통 5~15 커밋. 중간 커밋이 빌드를 깨도 되지만 **푸시 시점 HEAD는 `pnpm build` 통과** 필수. 분해 축·예외(이름 변경·생성물·lockfile)·`git add -p` 절차는 `shared/skills/git-commit/SKILL.md`.
 

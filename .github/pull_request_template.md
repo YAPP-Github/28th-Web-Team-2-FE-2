@@ -12,8 +12,7 @@
 
 - [ ] `pnpm lint`
 - [ ] `pnpm test`
-- [ ] `pnpm build`
-- [ ] `pnpm test:e2e`
+- [ ] `pnpm test:e2e` (production build 포함)
 - [ ] PR base가 `dev`인지 확인 (릴리스 PR은 `main`)
 
 ## Browser QA

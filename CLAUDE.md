@@ -16,7 +16,7 @@
 
 - 위 `conventions.md` 최상위 규칙을 모든 작업에서 준수.
 - **모르면 추측 말고 질문. 미정(TODO) 영역 건드리면 진행 전 묻고 `domain.md`에 기록.**
-- 위험 경로 변경·배포 직전 = 사용자 확인 게이트. (커밋·푸시는 `git-flow.md` — main 직접 푸시 허용, 단 **푸시 전 리뷰 1회**)
+- 위험 경로의 미확정 계약·배포 직전 = 사용자 확인 게이트. (커밋·푸시는 `git-flow.md` — 최신 dev의 작업 브랜치에서 dev 대상 PR)
 - **Figma 접근은 MCP 도구로만.** REST·public API(`api.figma.com`)·`curl`/`wget`/`WebFetch`·personal access token 전부 금지 — `.claude/settings.json`의 `deny`로 실제 차단돼 있다. **MCP가 안 되면 우회하지 말고 멈추고 알린다** (진단 순서는 `figma-bridge` §0-0). 디자이너에게 API 키를 요구하는 답은 잘못된 경로다
 - **`app/prototype/*`은 구조 유지 대상** — 삭제·대규모 개편 금지. 토큰을 입히거나 화면을 고치는 건 되지만 구조를 바꾸는 변경은 사용자 확인
 - **하네스는 규격만 담는다** — 기획서 성격의 문서(`shared/pages.md`·`detail-features.md`·`main-features.md`·`prototype-backlog.md` 등)의 내용을 agent·라우팅 문서에 옮겨 적지 않는다. 필요하면 그때 해당 파일을 읽는다
@@ -64,7 +64,7 @@
 - 크기: 파일 1-2=작음 / 3-5=중간 / 5+·새기능=큼
 - 위험 경로(`TODO(✍️):` 인증·결제 등) 건드리면 크기 무관 한 단계↑ + 게이트
 - "바로/빨리"→내림 / "제대로/꼼꼼히"→올림. 단 위험 경로는 못 내림.
-- **RSC/BFF 경계를 바꾸는 작업**(server↔client 전환, Route Handler 추가·삭제, 캐싱 전략 변경)은 위험과 무관하게 **리뷰 1회 강제** — main 직접 푸시 체제의 안전판.
+- **RSC/BFF 경계를 바꾸는 작업**(server↔client 전환, Route Handler 추가·삭제, 캐싱 전략 변경)은 위험과 무관하게 **리뷰 1회 강제** — PR 필수 게이트.
 
 ## agent 신호 → 라우팅 테이블
 
@@ -97,9 +97,9 @@
 
 ## 전용 플로우
 
-- **디자인 시스템 컴포넌트**(디자이너 바이브코딩): design-system-builder(Radix/shadcn 기반) → `/playground` 스토리 추가 → 빌드 1회 → 푸시 전 리뷰 1회(code-reviewer가 토큰·a11y·Figma 정합 겸함) → **바로 main 푸시. 여기서 끝** — 푸시하면 CI 자동 배포, 확인은 배포된 `/playground`. 테스트 작성·플랜 문서는 이 플로우 범위 밖(추후 test-writer 일괄)
+- **디자인 시스템 컴포넌트**(디자이너 바이브코딩): 최신 dev에서 design 브랜치 → design-system-builder(Radix/shadcn 기반) → `/playground` 스토리 추가 → 최종 검증 → 리뷰(code-reviewer가 토큰·a11y·Figma 정합 겸함) → dev 대상 PR. 확인은 PR Preview 또는 검증 환경의 `/playground`
 - **와이어프레임 초안**(디자인 전): 유저 플로우 → flow-reviewer → [⏸] → wireframe-builder(더미 데이터·저충실도) → 배포(⏸) → 피드백. ※ 토큰 검사 면제
-- **토큰 갱신**(디자이너가 Figma 값을 바꿨을 때 — 가장 빈번): figma-implementer가 분류 → `@theme static` 갱신 → **검산 3종**(`/playground` 스토리 라벨 갱신 · 대비 계산 · 빌드 후 산출물 토큰 emit 확인) → 푸시 → **"화면에서 보일 차이 1개"를 알려주며 배포 확인 안내**. 게이트는 매핑 공백·MCP 접근 실패뿐 — `get_variable_defs` 빈 응답은 폴백이 있으니 멈추지 않는다. **단 폴백은 MCP 안에서만**(REST 금지) (`figma-bridge` §0-0·§2·§4·§7)
+- **토큰 갱신**(디자이너가 Figma 값을 바꿨을 때 — 가장 빈번): figma-implementer가 분류 → `@theme static` 갱신 → **검산 3종**(`/playground` 스토리 라벨 갱신 · 대비 계산 · 빌드 후 산출물 토큰 emit 확인) → dev 대상 PR → **"화면에서 보일 차이 1개"를 알려주며 검증 환경 확인 안내**. 게이트는 매핑 공백·MCP 접근 실패뿐 — `get_variable_defs` 빈 응답은 폴백이 있으니 멈추지 않는다. **단 폴백은 MCP 안에서만**(REST 금지) (`figma-bridge` §0-0·§2·§4·§7)
 - **신규 화면**(디자인 확정 후): Figma 확정(⏸) → figma-implementer → code-reviewer
 - **BE API 연동**(marketgo Spring): api-developer가 `/v3/api-docs` 실조회 → 엔드포인트별 zod 스키마 → 서버 fetch 함수(`server-only`+캐싱 태그) → BFF Route Handler → 필요 시 클라 훅 → 빌드 1회 → 리뷰 1회 → 푸시. **스펙 조회 실패·스펙에 없는 것이 필요하면 게이트**(상상 금지). 응답 envelope가 엔드포인트마다 다르니 공통 unwrap 유틸을 만들지 않는다
 - **Bug**: bug-investigator(수정X) → 구현 agent → code-reviewer

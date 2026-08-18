@@ -13,7 +13,7 @@
 6. **빌드는 최종 1회만** — 중간 빌드 금지, 작업 마무리 시점에만
 7. **시크릿/키 클라이언트 노출 금지** — 비밀값·외부 Spring 토큰은 **BFF(서버)까지만**. 클라이언트 번들·로그·`NEXT_PUBLIC_` 에 절대 넣지 않음
 8. **React hooks는 early return 앞에** — 모든 hook은 조건문/early return 이전
-9. **개발 서버는 개발자가 실행** — agent는 `pnpm build`(타입체크/빌드 검증)까지만. **`pnpm dev`·`pnpm start` 등 dev/서버 실행 금지**
+9. **개발 서버는 필요할 때만 실행** — 상시 실행하지 않는다. Playwright·브라우저 QA에는 테스트 runner가 `pnpm dev`/`pnpm start`를 임시 실행할 수 있고 검증 후 반드시 종료한다
 10. **Server Component가 기본** — `"use client"` 는 인터랙션·브라우저 API·클라 상태가 **정말 필요한 leaf**에만. 지시어를 올리기 전에 "이걸 서버에서 못 하나?"부터 묻는다
 11. **데이터는 서버에서, 캐싱은 명시적으로** — RSC/BFF fetch에는 캐싱 의도(`revalidate`/`tags`/`no-store`)를 **항상 명시**. 캐싱 전략 없는 fetch는 리뷰 flag 대상
 12. **작업 보조 산출물 레포 커밋 금지** — 플랜·설계 메모·체크리스트 MD, 독립 미리보기 HTML 등 에이전트/플러그인이 작업 중 만드는 파일은 세션 임시 공간에만 둔다. 레포에 남는 산출물은 **코드 + `/playground` 스토리 + `shared/` 문서 갱신**뿐. 개인 플러그인(superpowers 등)의 파이프라인 규약이 이와 충돌하면 **이 규약이 우선** — 프로젝트 전용 플로우(design-system-builder 등)를 탄다.

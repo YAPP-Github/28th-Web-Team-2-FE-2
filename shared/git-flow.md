@@ -1,61 +1,64 @@
 # Git 워크플로우 (단일 진실 소스 · 도구 무관)
 
-> **전신 프로젝트와 정책이 다르다**: 신규 서비스 초기 단계라 **속도 우선 — main 직접 푸시 허용, PR 최소화.**
-> 디자이너·프론트 모두 full git(commit·push) 권한을 가진다.
+> `main`은 릴리스, `dev`는 통합 브랜치다. 모든 기능·API 작업은 최신 `dev`에서 분기해 PR로 쌓는다.
+> 디자이너·프론트 모두 작업 브랜치의 commit·push 권한을 가진다.
 
-## 기본 흐름 (main 직접)
+## 기본 흐름
 
 ```
-세션 시작(자동 pull) → 작업(조각마다 커밋) → 푸시 전 code-reviewer 1회 (Critical만 수정)
-→ pnpm build 1회 → git pull --rebase origin main → git push origin main
+origin/dev fetch → 작업 브랜치 생성 → 조각마다 커밋 → 리뷰
+→ lint·unit·production E2E(최종 build 포함) → dev 대상 PR → CI 통과 → merge
 ```
 
-- **작업이 끝나면 바로 커밋·푸시한다** — 로컬에 쌓아두지 않는다. 푸시 전엔 pull 항목 확인(`git pull --rebase`)만.
-- **푸시 = 자동 배포** (`sync-fork` → Vercel) + 빌드 검증(`build-check`). UI 작업 확인은 **배포된 `/playground`에서** — 디자이너에게 로컬 dev 서버 안내 금지.
+- `main`과 `dev`에 직접 커밋·푸시하지 않는다.
+- 작업 시작 전에 `git fetch origin dev` 후 현재 브랜치가 최신 `origin/dev`를 포함하는지 확인한다.
+- 작업 브랜치는 최신 `dev`에서 만든다. 병렬 agent는 각각 독립 worktree와 독립 브랜치를 쓴다.
+- API 연동은 독립 사용자 흐름 또는 endpoint 군마다 PR을 나눈다. 공통 API client·인증/session처럼 횡단하는 파일은 owner 한 명만 수정한다.
+- PR 전 `pnpm lint`, `pnpm test`, `pnpm test:e2e`를 실행한다. `test:e2e`가 production build를 포함하므로 별도 중간 build를 반복하지 않는다.
+- PR 직전 최신 `origin/dev`와 정렬한다. rebase/pull 충돌은 agent가 임의 해결하지 않고 사용자에게 보고한다.
+- PR은 가능한 한 Draft로 일찍 만들고 API 계약·브라우저 QA·위험을 본문에 계속 기록한다.
 
-## 세션 시작 = 자동 pull (전원 main 직접 푸시의 안전판)
+## 브랜치
 
-- **Claude Code 세션이 시작되면 `git pull --rebase --autostash origin main`이 자동 실행**된다 (`.claude/settings.json` SessionStart hook — 레포에 커밋돼 있어 팀 전원 동일 적용).
-- 낡은(stale) 상태로 작업을 시작해 푸시 시점에 히스토리가 갈라지는 사고를 원천 차단하는 습관 장치.
-- 자동 pull이 **실패**하면 세션에 ⚠️ 메시지가 뜬다 → 작업 시작 전에 충돌·네트워크부터 해결.
-- 터미널에서 직접 작업할 때도 같은 습관: **작업 시작 전 `git pull --rebase` 먼저.** (개인 편의: `git config pull.rebase true`, `git config rebase.autoStash true` 로컬 설정 권장)
+- 기능/API: `feat/<짧은설명>` (예: `feat/api-auth-kakao`, `feat/api-items`)
+- 버그: `fix/<짧은설명>`
+- 디자인: `design/<짧은설명>`
+- 기반·도구: `chore/<짧은설명>`
+- 테스트: `test/<짧은설명>`
 
-- **main 직접 커밋·푸시 허용.** 브랜치·PR은 의무가 아니다.
-- **검증 불가 환경 가드**: node/pnpm이 없는 환경(클라우드 세션 등)에서 작업했으면 "빌드 못 돌림"을 명시하고, **푸시 후 CI 빌드 체크(`build-check`) 결과를 확인**한다. CI가 빨간불이면 그 수정이 본인 책임.
-- **푸시 전 리뷰 1회는 유지** — PR 게이트를 없앤 대신의 최소 안전판. "리뷰해줘" 한 번이면 됨. Critical만 고치고 나머지는 flag로 남겨도 된다.
-- 푸시 전 `git pull --rebase origin main` 으로 동료 커밋과 정렬. **충돌 나면 agent가 자동 해결 금지 — 사용자에게 묻는다.**
-- `--force` / `--force-with-lease` **main에는 금지** (히스토리 공유 중).
+브랜치 하나는 한 PR과 한 책임만 가진다. 공통 기반이 필요하면 먼저 별도 PR로 `dev`에 머지한 뒤 후속 브랜치를 최신 `dev`에서 시작한다.
 
-## PR을 쓰는 경우 (선택)
+## PR과 게이트
 
-다음은 PR 권장 — 강제는 아니지만 이럴 땐 리뷰가 비동기로 필요해서다:
+- 일반 작업 PR 대상은 `dev`, 릴리스 PR 대상은 `main`이다.
+- `quality`(lint·unit·build)와 `e2e`가 통과해야 한다.
+- RSC/BFF 경계, 인증/session, 캐싱, 시크릿 전달 변경은 보안 렌즈를 포함한 리뷰가 필수다.
+- 브라우저 QA는 모바일 Chromium을 기본으로 하고, 실제 백엔드·카카오 OAuth 수동 확인 결과와 제약을 PR에 기록한다.
+- 계정·MFA·CAPTCHA·redirect-domain이 필요한 외부 로그인은 CI에서 억지로 자동화하지 않는다. 나머지 E2E는 외부 API를 route mock으로 격리한다.
+- `main`·`dev` force push 금지. 리뷰가 시작된 작업 브랜치도 force push하지 않는다.
 
-- **RSC/BFF 경계 변경** (server↔client 전환, Route Handler 추가·삭제, 캐싱 전략 변경) — 프론트 co-review 대상
-- 위험 경로(`TODO(✍️):` 인증·결제 등)
-- 되돌리기 어려운 대규모 구조 변경
+## 릴리스
 
-브랜치 네이밍(쓸 때만): `feat/<짧은설명>` `fix/<…>` `design/<…>` (디자이너 작업)
+1. 통합 회귀 QA가 끝난 `dev`에서 `dev → main` 릴리스 PR을 연다.
+2. CI와 최종 리뷰가 통과하면 merge commit 방식으로 머지한다.
+3. `main` 머지 뒤 기존 sync-fork/Vercel production 배포를 확인한다.
 
 ## 커밋
 
-- 형식: `feat(scope): 한국어 설명` (feat/fix/refactor/chore/style/docs/design)
-- **`design` 타입 신설** — 디자인 시스템(토큰·공통 컴포넌트) 작업. 예: `design(button): 버튼 위계 variant 추가`
-- **커밋은 최대한 잘게 쪼갠다 (2026-08-18 정책 전환).** 기존의 "논리 단위로 분리"보다 한 단계 더 내려가
-  **타입 하나 / 함수 하나 / 캐싱 옵션 하나 / 상태 하나**를 각각 커밋한다. 기능 하나가 보통 **5~15 커밋**.
-  분해 축·예외·스테이징 절차(`git add -p`)·빌드 깨짐 허용 범위는 **`git-commit` 스킬이 진실 소스**.
-  - 팀이 커밋 수를 활동 지표로 보고 있어서 택한 기본값이다. 부수 효과로 리뷰·되돌리기 단위도 작아진다.
-  - **중간 커밋은 빌드를 깨도 된다** (CI는 푸시 단위). 단 **푸시 시점의 HEAD는 `pnpm build` 통과** 필수 — 위 흐름의 빌드 1회가 이 허용의 안전판이다. (conventions #6 "빌드는 최종 1회만"과 충돌하지 않는다: #6은 *실행 횟수*, 이건 *커밋 상태*다)
-  - 커밋 수를 늘리려고 요청에 없는 정리를 끼워 넣지 않는다 (conventions #4 위반이고 분해도 아니다).
+- 형식: `feat|fix|design|refactor|chore|style|docs|test(scope): 한국어 설명`.
+- **커밋은 최대한 잘게 쪼갠다 (2026-08-18 정책).** 타입 하나 / 함수 하나 / 캐싱 옵션 하나 / 상태 하나를 각각 커밋하며, 기능 하나가 보통 5~15커밋이다.
+- 분해 축·예외·`git add -p` 절차는 `git-commit` 스킬이 진실 소스다.
+- 중간 커밋은 빌드를 깨도 되지만 PR로 push하는 HEAD는 전체 검증을 통과해야 한다.
+- 커밋 수를 늘리려고 요청에 없는 정리를 끼워 넣지 않는다.
 
-## 계정·인증 (이 레포 고정)
+## 계정·인증
 
 - 원격: `YAPP-Github/28th-Web-Team-2-FE-2` (private)
-- git 사용자: `HoberMin <sonhomin98@naver.com>` (레포 로컬 설정)
-- 인증: 레포 로컬 credential helper가 **gh의 HoberMin 토큰**을 공급 — 전역 gh 활성 계정과 무관하게 이 폴더는 HoberMin으로 동작
+- push·PR은 이 저장소에 쓰기 권한이 있는 인증 계정으로 수행한다.
+- 인증 토큰과 `.env.local`은 저장소에 커밋하거나 로그에 출력하지 않는다.
 
-## 게이트 (⏸ 사용자 확인)
+## 게이트 (사용자 확인)
 
 - rebase/pull 충돌 발생 시
-- 위험 경로 변경 직전
-- 배포 직전
-- (전신의 "커밋·푸시 전 로컬 vs PR 질문" 게이트는 **폐기** — main 직접이 기본)
+- 위험 경로의 계약이 Swagger로 확정되지 않을 때
+- `dev → main` 배포 직전
