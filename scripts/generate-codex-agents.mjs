@@ -14,11 +14,11 @@ const VALID_EFFORT = new Set(["low", "medium", "high", "xhigh", "max"]);
 const SANDBOX_OVERRIDE = { "diff-organizer": "workspace-write" };
 
 function parseFrontmatter(md) {
-  const m = md.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const m = md.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!m) throw new Error("frontmatter 없음");
   const meta = {};
   let currentKey = null;
-  for (const line of m[1].split("\n")) {
+  for (const line of m[1].split(/\r?\n/)) {
     const kv = line.match(/^(\w[\w-]*):\s*(.*)$/);
     if (kv) {
       currentKey = kv[1];
@@ -28,7 +28,7 @@ function parseFrontmatter(md) {
       meta[currentKey].push(line.replace(/^\s+-\s+/, "").trim());
     }
   }
-  return { meta, body: m[2].trim() };
+  return { meta, body: m[2].replaceAll("\r\n", "\n").trim() };
 }
 
 function tomlString(s) {
