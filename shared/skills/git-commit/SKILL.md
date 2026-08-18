@@ -5,7 +5,7 @@ description: 커밋 분해 규율 — 커밋을 함수·타입 단위까지 최�
 
 # 커밋 분해 (최대 분해 원칙)
 
-> `shared/git-flow.md`가 흐름(main 직접 푸시·푸시 전 리뷰 1회)의 진실 소스다.
+> `shared/git-flow.md`가 흐름(최신 dev 기준 작업 브랜치·dev 대상 PR)의 진실 소스다.
 > 이 스킬은 **"한 커밋에 무엇을 담을 것인가"** 만 다룬다.
 
 ## 0. 왜 잘게 쪼개나
@@ -63,7 +63,7 @@ description: 커밋 분해 규율 — 커밋을 함수·타입 단위까지 최�
 ## 5. 메시지 형식
 
 `git-flow.md`의 형식을 그대로 쓴다: `type(scope): 한국어 설명`
-(`feat|fix|design|refactor|chore|style|docs`)
+(`feat|fix|design|refactor|chore|style|docs|test`)
 
 - scope는 **기능·도메인 이름**으로 (`items`, `auth`, `stores`) — 파일명이 아니다.
 - 설명은 **무엇을 했는지 한 가지**만. "및", "그리고"가 들어가면 커밋을 덜 쪼갠 신호다.
@@ -106,7 +106,7 @@ git commit -m "feat(items): ItemResponse 타입 정의"
 분해는 커밋 단위이지 푸시 단위가 아니다. **여러 커밋을 모아 한 번에 푸시한다.**
 
 ```
-푸시 전 code-reviewer 1회 → pnpm build 1회 → git pull --rebase origin main → git push origin main
+푸시 전 code-reviewer 1회 → 최종 검증 → git fetch origin dev → 최신 dev와 정렬 → 작업 브랜치 push → dev 대상 PR
 ```
 
 충돌은 **자동 해결 금지, 사용자에게** (`git-flow.md`).
