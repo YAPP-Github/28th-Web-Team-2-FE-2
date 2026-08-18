@@ -34,9 +34,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "out=$(GIT_TERMINAL_PROMPT=0 git pull --rebase --autostash origin main 2>&1); if [ $? -eq 0 ]; then echo \"[세션 시작 자동 pull] $(echo \"$out\" | tail -1)\"; else echo \"[세션 시작 자동 pull] ⚠️ 실패 — 충돌/네트워크 확인 필요: $(echo \"$out\" | tail -1)\"; fi",
+            "command": "out=$(GIT_TERMINAL_PROMPT=0 git fetch origin dev 2>&1); if [ $? -ne 0 ]; then echo \"[세션 시작 dev 확인] ⚠️ fetch 실패 — 네트워크·인증 확인 필요: $(echo \"$out\" | tail -1)\"; elif git merge-base --is-ancestor origin/dev HEAD; then echo \"[세션 시작 dev 확인] 현재 브랜치가 최신 origin/dev를 포함함\"; else echo \"[세션 시작 dev 확인] ⚠️ 현재 브랜치가 최신 origin/dev를 포함하지 않음 — 작업 전 재정렬 필요\"; fi",
             "timeout": 45,
-            "statusMessage": "main 최신화 중 (자동 pull)"
+            "statusMessage": "origin/dev 기준선 확인 중"
           }
         ]
       }

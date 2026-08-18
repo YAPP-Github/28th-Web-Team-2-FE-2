@@ -49,7 +49,7 @@
 | wireframe-builder | 디자인 전 와이어프레임 초안 (더미 데이터·배포) | 쓰기 | sonnet | wireframe-drafting, nextjs-app-router, form-patterns, typescript-strict, accessibility | **디자인 가이드 없이**. 토큰 규칙 면제(초안 한정) |
 | test-writer | AI-native 테스트 (Vitest + Playwright + **스크린샷 회귀 + axe**) | 쓰기 | sonnet | test-strategy, playwright-e2e, vitest | 구현 베끼는 동어반복 테스트 금지 |
 | code-reviewer | 코드 리뷰 (게이트키퍼 — **푸시 전 1회**) + **디자인 정합·토큰·a11y 겸함** | 읽기+자동수정 (MCP 상속) | opus·high | api-patterns, frontend-design, typescript-strict, accessibility, web-performance, nextjs-app-router, data-fetching | 자동수정+flag. 차단은 Critical만. **RSC/Client 경계·캐싱 의도·시크릿 클라 노출·Figma REST 우회 흔적 필수 체크** |
-| diff-organizer | 커밋 정리·푸시 (git-flow) — **최대 분해 커밋** | 쓰기(git) | sonnet | git-commit | **main 직접 푸시 기본.** 기능 하나 = 5~15 커밋. pull --rebase 충돌 시 사용자에게. main force 금지 |
+| diff-organizer | 커밋 정리·푸시 (git-flow) — **최대 분해 커밋** | 쓰기(git) | sonnet | git-commit | 최신 dev 기준 작업 브랜치 → dev PR. 기능 하나 = 5~15커밋. 충돌 시 사용자에게. main/dev force 금지 |
 
 > **빌트인 agent 활용**: 빠른 코드 탐색은 **Explore**(read-only 광범위 검색), 계획 초안은 **Plan**을 쓴다 — 같은 일을 하는 커스텀 agent를 두지 않는다.
 
@@ -69,5 +69,5 @@
 - **미정(TODO) 영역을 건드리는 작업이면 진행 전 묻고, 답을 도메인 문서에 기록한다.**
 - **`app/prototype/*`은 구조 유지 대상** — 삭제·대규모 개편 금지 (요청에 없는 프로토타입 제거는 🔴).
 - **Figma 접근은 MCP 전용** — REST·public API·토큰 발급 금지 (`figma-bridge` §0-0).
-- 위험 경로 변경·배포 직전엔 사용자 확인. 커밋·푸시는 `git-flow.md`(main 직접 허용, 푸시 전 리뷰 1회).
+- 위험 경로의 미확정 계약·배포 직전엔 사용자 확인. 커밋·푸시는 `git-flow.md`(작업 브랜치 → dev PR, CI+리뷰).
 - 자세한 컨벤션은 `conventions.md`, 리뷰는 `review-standard.md`.

@@ -31,7 +31,7 @@ You are the BFF/API-layer developer. `app/api/*` Route Handler가 **외부 Sprin
 - 캐싱 의도 없는 fetch를 만들지 않는다 (conventions #11)
 - Query/Mutation 훅 네이밍: `useGet*API` / `use[Action]*API` (`api-patterns`)
 - **커밋은 최대 분해** — 타입 / 스키마 / 함수 골격 / 캐싱 옵션 / 라우트 / 훅을 각각 커밋 (`git-commit` 스킬). 스스로 커밋하지 않고 넘길 땐, 분해 가능한 조각 목록을 결과에 적어 준다
-- 요청한 것만 변경. `pnpm build`는 최종 1회만, `pnpm dev` 금지
+- 요청한 것만 변경. production build는 최종 검증에서만 실행하고, dev 서버는 Playwright·브라우저 QA runner가 임시 실행할 때만 허용
 
 ## 프로젝트 구조
 → **`figma-bridge` 스킬 §8이 진실 소스.** (agent 파일에 복붙하지 않는다 — 여러 곳에 복붙돼 어긋났던 이력 때문)
