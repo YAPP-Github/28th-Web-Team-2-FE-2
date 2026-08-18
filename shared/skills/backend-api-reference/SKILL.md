@@ -39,7 +39,7 @@ spec "console.log(JSON.stringify(d.components.schemas.ItemResponse,null,2))"
 | 인증 | `bearerAuth` — HTTP Bearer, JWT. `Authorization: Bearer <accessToken>` |
 | 토큰 발급 | `POST /api/auth/{providerType}/login` (OAuth `idToken` 전달) → `{ accessToken }` |
 | 재발급 | `POST /api/auth/reissue` — refreshToken을 **쿠키**로 받는다 |
-| base URL 환경변수 | `TODO(✍️):` 이름 확정 후 기록. **서버 전용**(`NEXT_PUBLIC_` 금지) |
+| base URL 환경변수 | `BACKEND_API_URL`. **서버 전용**(`NEXT_PUBLIC_` 금지) |
 
 - ⚠️ 스펙의 `servers[0].url`이 **`http://`** 로 잡혀 있다(Swagger UI는 https). 코드에는 **https를 쓴다** — 생성기가 뱉은 http를 그대로 박으면 혼합 콘텐츠/리다이렉트 문제가 난다.
 - **accessToken은 BFF(서버)까지만.** 클라 번들·`NEXT_PUBLIC_`·로그 노출은 Critical (conventions #7).
@@ -68,6 +68,7 @@ spec "console.log(JSON.stringify(d.components.schemas.ItemResponse,null,2))"
 - 스펙에 없는 게 필요하면 → **멈추고 사용자에게** (BE에 물어야 할 항목으로 보고).
 - 임시 진행이 불가피하면 BFF에 mock을 두되 `TODO(✍️): 스펙 확정 시 교체` 주석 + zod 스키마는 미리 정의.
 - 응답은 **zod로 경계 검증** 후 사용 (`as Type` 캐스팅 금지 — `api-patterns`).
+- 공통 HTTPS URL·명시적 캐시·오류 경계는 `app/_lib/api/backend-api.ts`와 `bff-error-response.ts`를 사용한다. endpoint별 응답 schema와 안전한 사용자 메시지는 각 BFF에서 확정한다.
 
 ## 4. 아직 모르는 것
 
