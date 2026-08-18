@@ -27,8 +27,6 @@ const REGION_ID_LENGTH = 10;
  *    적혀 있지만 실제로는 안 터진다). 서버는 `@Pattern("\\d{10}")`만 보므로 이 오답을
  *    받아들이고, 조회는 조용히 빈 결과가 된다. 송신측은 원본 자릿수를 알 수 있으니 여기서 막는다.
  */
-const MIN_NUMERIC_REGION_ID_DIGITS = REGION_ID_LENGTH - 1;
-
 const reportRegionIdSchema = z
   .union([
     z
@@ -38,25 +36,22 @@ const reportRegionIdSchema = z
       .number()
       .int()
       .positive()
-      // 앞자리 0 한 개만 잘릴 수 있다. 그보다 짧으면 애초에 법정동 코드가 아니다.
-      .refine((value) => String(value).length >= MIN_NUMERIC_REGION_ID_DIGITS, {
-        message: `법정동 코드는 숫자 ${REGION_ID_LENGTH}자리여야 합니다.`,
-      })
-      .refine((value) => String(value).length <= REGION_ID_LENGTH, {
-        message: `법정동 코드는 숫자 ${REGION_ID_LENGTH}자리여야 합니다.`,
-      })
+      // 앞자리 0 한 개만 잘릴 수 있다. 그보다 짧거나 길면 애초에 법정동 코드가 아니다.
+      .refine(
+        (value) =>
+          String(value).length >= REGION_ID_LENGTH - 1 &&
+          String(value).length <= REGION_ID_LENGTH,
+        { message: `법정동 코드는 숫자 ${REGION_ID_LENGTH}자리여야 합니다.` },
+      )
       .transform((value) => String(value).padStart(REGION_ID_LENGTH, "0")),
-  ])
-  .pipe(z.string().regex(/^\d{10}$/));
+  ]);
 
 /**
  * 제보 유형. 서버 `ReportType` enum과 1:1이다.
  * - `PURCHASE`: 직접 사면서 확인한 가격
  * - `OBSERVED`: 사지 않고 가격표만 본 경우
  */
-export const REPORT_TYPES = ["PURCHASE", "OBSERVED"] as const;
-export const reportTypeSchema = z.enum(REPORT_TYPES);
-export type ReportType = z.infer<typeof reportTypeSchema>;
+export const reportTypeSchema = z.enum(["PURCHASE", "OBSERVED"]);
 
 /** 카카오 장소 검색 결과 모양. 필수는 id·placeName·addressName 셋뿐이다. */
 export const storeRequestSchema = z.object({
