@@ -19,6 +19,13 @@ const VALID_REQUEST = {
   },
 };
 
+/** VALID_REQUEST 에서 필드 하나를 뺀 사본. 필수 필드 검증에 쓴다. */
+function omit(field: keyof typeof VALID_REQUEST) {
+  const copy: Record<string, unknown> = { ...VALID_REQUEST };
+  delete copy[field];
+  return copy;
+}
+
 describe("createReportRequestSchema", () => {
   it("필수 필드가 모두 있으면 통과한다", () => {
     const parsed = createReportRequestSchema.parse(VALID_REQUEST);
@@ -28,15 +35,11 @@ describe("createReportRequestSchema", () => {
   });
 
   it("regionId가 없으면 거부한다", () => {
-    const { regionId: _regionId, ...withoutRegion } = VALID_REQUEST;
-
-    expect(() => createReportRequestSchema.parse(withoutRegion)).toThrow();
+    expect(() => createReportRequestSchema.parse(omit("regionId"))).toThrow();
   });
 
   it("reportType이 없으면 거부한다", () => {
-    const { reportType: _reportType, ...withoutType } = VALID_REQUEST;
-
-    expect(() => createReportRequestSchema.parse(withoutType)).toThrow();
+    expect(() => createReportRequestSchema.parse(omit("reportType"))).toThrow();
   });
 
   it("정의되지 않은 reportType을 거부한다", () => {
@@ -73,8 +76,7 @@ describe("createReportRequestSchema", () => {
   });
 
   it("storeId만 보내는 경우를 허용한다", () => {
-    const { store: _store, ...withoutStore } = VALID_REQUEST;
-    const parsed = createReportRequestSchema.parse({ ...withoutStore, storeId: 7 });
+    const parsed = createReportRequestSchema.parse({ ...omit("store"), storeId: 7 });
 
     expect(parsed.storeId).toBe(7);
     expect(parsed.store).toBeUndefined();
@@ -82,9 +84,7 @@ describe("createReportRequestSchema", () => {
 
   // 서버는 둘 다 없으면 storeId를 null로 저장한다(400이 아니다).
   it("매장 정보가 아예 없는 경우도 허용한다", () => {
-    const { store: _store, ...withoutStore } = VALID_REQUEST;
-
-    expect(() => createReportRequestSchema.parse(withoutStore)).not.toThrow();
+    expect(() => createReportRequestSchema.parse(omit("store"))).not.toThrow();
   });
 
   it("가격과 양은 양수만 받는다", () => {
