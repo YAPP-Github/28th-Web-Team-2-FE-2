@@ -2,7 +2,7 @@ import "server-only";
 
 import { revalidateTag } from "next/cache";
 import {
-  createReportResponseSchema,
+  createReportEnvelopeSchema,
   type CreateReportRequest,
   type CreateReportResponse,
 } from "../schemas/reports";
@@ -19,12 +19,13 @@ export async function createReport(params: {
   body: CreateReportRequest;
   token: string;
 }): Promise<CreateReportResponse> {
-  const created = await springFetch({
+  // `/api/v1/**`는 서버가 `{code, message, data}`로 감싸 응답한다 — envelope 스키마로 받고 data만 꺼낸다.
+  const envelope = await springFetch({
     path: `/api/v1/items/${params.itemId}/reports`,
     method: "POST",
     body: params.body,
     token: params.token,
-    schema: createReportResponseSchema,
+    schema: createReportEnvelopeSchema,
     cache: "no-store",
   });
 
@@ -32,5 +33,5 @@ export async function createReport(params: {
   revalidateTag(CACHE_TAGS.items, REVALIDATE_IMMEDIATELY);
   revalidateTag(CACHE_TAGS.stores, REVALIDATE_IMMEDIATELY);
 
-  return created;
+  return envelope.data;
 }
