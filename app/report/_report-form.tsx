@@ -4,17 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/_components/button";
-import {
-  uploadImageValidationMessage,
-  validateUploadImage,
-} from "@/app/_lib/api/schemas/images";
 import type { StoreRequest } from "@/app/_lib/api/schemas/reports";
 import { FigmaIcon } from "@/app/_lib/figma-asset";
-import {
-  PHOTO_MESSAGE,
-} from "@/app/_lib/report-photo-messages";
+import { PHOTO_MESSAGE } from "@/app/_lib/report-photo-messages";
 import { ROUTES } from "@/app/_lib/routes";
-import { submitReportAction, uploadReportPhotoAction } from "./_actions";
+import { submitReportAction } from "./_actions";
 import {
   FieldInput,
   FieldSelect,
@@ -46,13 +40,8 @@ import { clearReportPhoto, loadReportPhoto, saveReportPhoto } from "./_lib/photo
 //  4. 제목·라벨 고정 폭(179 · 358)을 버렸다. 한국어 텍스트에 고정 폭을 주면 실데이터에서 깨진다.
 //
 // ── Figma에 정의가 없어 코드가 정한 것 (전부 GUI피드백.md에 기록) ────────────────
-//  · **사진 등록 → 인식 → 미리보기 전환 조건이 없다.** 8201(모달)의 폼은 아직 dropzene이고
-//    8236(미리보기)로 가는 트리거가 시안에 없다. 여기서는 **파일을 고른 뒤 이미지가 실제로
-//    로드될 때까지 모달을 띄우고, 로드가 끝나면 미리보기로 넘어간다** — 발명한 타이머가 아니라
-//    실제 비동기 작업을 모달이 덮는 방식이다. X는 취소(사진 버림)로 뒀다.
-//  · **인식 성공 시 품목·가격을 자동 입력한다는 안내문구가 dropzone에 있지만 그 동작 정의가 없다.**
-//    백엔드가 실제로 반환한 품목·가격·수량 후보만 자동 입력하고, 사용자가 수정할 수 있게 한다.
-//  · 인식 **실패** 상태가 없다. 파일 로드가 실패하면 모달을 닫고 사진을 버린다.
+//  · 사진은 서버에 업로드하거나 인식하지 않는다. 사진을 고르면 인식 대기 모달을 잠시 보여준 뒤
+//    브라우저 로컬 미리보기로 전환한다. 파일 로드가 실패하면 사진을 버리고 다시 고를 수 있게 한다.
 //  · 단위는 `kg`·`g`·`개`·`포기` 중 사용자가 선택해 제보한다.
 //  · CTA "확인"의 이동 대상이 명시돼 있지 않다 → F04-4 제보 완료로 보냈다(플로우상 유일한 전진 경로).
 //
@@ -60,11 +49,8 @@ import { clearReportPhoto, loadReportPhoto, saveReportPhoto } from "./_lib/photo
 //  · **reportType을 "PURCHASE"로 고정한다.** Figma 어디에도 "구매/목격"을 고르는 토글이 없다.
 //    유일하게 UI가 있는 흐름(사진 찍어 가격 입력)이 "실제로 산 가격 확인"에 가깝다고 보고
 //    골랐다 — 토글이 생기면 `_actions.ts`의 `FIXED_REPORT_TYPE` 하나만 바꾸면 된다.
-//  · **사진 업로드가 붙었다**(2026-08-20, `POST /api/v1/images`). 제출은 2단계다 —
-//    사진을 먼저 올려 `imageUrl`을 받고, 그 URL을 제보 생성의 `photoUrl`로 넘긴다.
-//    사진 원본은 품목·장소 화면을 다녀와도 잃지 않도록 `_lib/photo-draft.ts`의 IndexedDB에
-//    계속 임시 보관한다. 업로드가 실패하면 원본을 유지해 재시도하고,
-//    사용자가 사진을 지웠을 때만 사진 없는 제보를 보낸다.
+//  · 사진 원본은 품목·장소 화면을 다녀와도 잃지 않도록 `_lib/photo-draft.ts`의 IndexedDB에
+//    임시 보관하지만 제보 요청에는 포함하지 않는다.
 //  · **F04-2 카테고리 매핑**(한글 7종 ↔ Spring `ItemCategory`)은 `_data.ts`가 `(tabs)/prices`의
 //    기존 `PRICE_GROUPS` 매핑을 재사용한다 — 판단 근거는 그 파일 머리말 참고.
 //
@@ -100,25 +86,9 @@ type PhotoState = {
   file: File;
   url: string;
   scanning: boolean;
-  uploadedImageUrl?: string;
 } | null;
 
-/**
- * 사진 실패 안내. `retryUpload`가 CTA 라벨을 가른다 — 업로드가 남았으면 "사진 다시 올리기",
- * 인식만 실패했으면 사진은 이미 올라갔으니 "확인"(그대로 제출 가능)이다.
- * 예전엔 실패 종류를 구분하지 않아 인식 실패인데 버튼이 "사진 다시 올리기"라고 말하면서
- * 누르면 실제로는 제보가 제출됐다 — 라벨과 동작이 어긋났다.
- */
-type PhotoError = {
-  message: string;
-  retryUpload: boolean;
-};
-
-type DetectedItem = {
-  itemId: number;
-  name: string;
-  unit: string;
-};
+const LOCAL_SCAN_DELAY_MS = 1_500;
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -175,9 +145,8 @@ export function ReportForm({
 }: ReportFormProps) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const photoGenerationRef = useRef(0);
   const [photo, setPhoto] = useState<PhotoState>(null);
-  const [photoError, setPhotoError] = useState<PhotoError | null>(null);
+  const [photoError, setPhotoError] = useState("");
   const [price, setPrice] = useState(() => formatPriceInput(initialPrice ?? ""));
   const [amount, setAmount] = useState(() => digitsOnly(initialAmount ?? ""));
   const [reportUnit, setReportUnit] = useState<ReportUnit | undefined>(() =>
@@ -185,9 +154,8 @@ export function ReportForm({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [detectedItem, setDetectedItem] = useState<DetectedItem | null>(null);
-  const selectedItemId = itemId ?? detectedItem?.itemId;
-  const selectedVegetableName = vegetableName ?? detectedItem?.name;
+  const selectedItemId = itemId;
+  const selectedVegetableName = vegetableName;
   const reportCarryQuery = buildItemQuery(carryQuery, selectedItemId);
 
   // 품목·장소 선택은 별도 라우트로 이동하므로 컴포넌트가 다시 마운트된다. 사진 원본은
@@ -200,7 +168,6 @@ export function ReportForm({
         file: file.file,
         url: URL.createObjectURL(file.file),
         scanning: false,
-        uploadedImageUrl: file.uploadedImageUrl,
       });
     });
     return () => {
@@ -215,6 +182,14 @@ export function ReportForm({
       if (url) URL.revokeObjectURL(url);
     };
   }, [photo?.url]);
+
+  useEffect(() => {
+    if (!photo?.scanning) return;
+    const timeoutId = window.setTimeout(() => {
+      setPhoto((current) => (current ? { ...current, scanning: false } : current));
+    }, LOCAL_SCAN_DELAY_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [photo?.scanning]);
 
   // Figma에 검증 규칙 정의가 없다(위 ⚠️). `shared/pages.md` F04-1이 "필수는 품목·가격·양"이라고
   // 적어 두었지만 **판매 장소도 포함시켰다** — "어디서 본 가격인가"가 이 플로우의 존재 이유이고,
@@ -234,71 +209,9 @@ export function ReportForm({
     // 같은 파일을 다시 고를 수 있어야 하므로 input 값을 비운다.
     event.target.value = "";
     if (!file) return;
-    setPhotoError(null);
-    const validationError = validateUploadImage(file);
-    if (validationError) {
-      setPhotoError({ message: uploadImageValidationMessage(validationError), retryUpload: true });
-      return;
-    }
-    const generation = ++photoGenerationRef.current;
-    if (!itemId) setDetectedItem(null);
+    setPhotoError("");
     setPhoto({ file, url: URL.createObjectURL(file), scanning: true });
-    void analyzePhoto(file, generation);
-  }
-
-  /**
-   * 사진 업로드 → 인식. **원본 오류 메시지를 화면에 내보내지 않는다** — 예전엔 catch에서
-   * `error.message`를 그대로 렌더해, Server Action이 예기치 못한 오류를 던지면 Next의 영문
-   * 안내문이 빨간 글씨로 통째로 떴다. 원문은 콘솔에만 남기고 문구는 `PHOTO_MESSAGE`만 쓴다.
-   *
-   * 어느 단계에서 끊겼는지(`stage`)를 들고 있는 이유: 업로드가 실패했으면 확인을 다시 눌러
-   * 재시도하는 게 맞고("사진을 올리지 못했어요"), 인식이 실패했으면 값을 직접 입력하면
-   * 되기 때문에("직접 입력해 주세요") 안내가 달라진다.
-   */
-  async function analyzePhoto(file: File, generation: number) {
-    const isStale = () => generation !== photoGenerationRef.current;
-    const stopScanning = () =>
-      setPhoto((prev) => (prev ? { ...prev, scanning: false } : prev));
-    let stage: "upload" | "analyze" = "upload";
-
-    try {
-      await saveReportPhoto(file);
-      const form = new FormData();
-      form.append("image", file);
-      const uploaded = await uploadReportPhotoAction(form);
-      if (isStale()) return;
-      if (uploaded.status !== "success") {
-        stopScanning();
-        if (uploaded.status === "unauthorized") setSubmitError(uploaded.message);
-        else setPhotoError({ message: uploaded.message, retryUpload: true });
-        return;
-      }
-
-      await saveReportPhoto(file, uploaded.imageUrl);
-      setPhoto((prev) =>
-        prev && generation === photoGenerationRef.current
-          ? { ...prev, uploadedImageUrl: uploaded.imageUrl }
-          : prev,
-      );
-
-      // 여기부터는 사진이 이미 올라갔다 — 실패해도 제보는 그대로 보낼 수 있다.
-      stage = "analyze";
-      // OCR은 임시로 제거하고, 업로드가 끝나면 인식이 성공한 것처럼 로딩만 종료한다.
-      // 품목·가격·수량은 사용자가 직접 입력한다.
-      if (isStale()) return;
-      stopScanning();
-    } catch (error) {
-      // 던져진 오류(Server Action 내부 예외·네트워크 단절)는 문구를 만들 근거가 없다.
-      // 원문은 콘솔에만 남기고, 끊긴 단계에 맞는 한국어 안내로 바꿔 보여준다.
-      console.error("[report] 사진 처리 실패", { stage, error });
-      if (isStale()) return;
-      stopScanning();
-      setPhotoError(
-        stage === "upload"
-          ? { message: PHOTO_MESSAGE.upload, retryUpload: true }
-          : { message: PHOTO_MESSAGE.analyze, retryUpload: false },
-      );
-    }
+    void saveReportPhoto(file);
   }
 
   async function handleSubmit() {
@@ -315,30 +228,8 @@ export function ReportForm({
 
     setIsSubmitting(true);
     setSubmitError("");
-    setPhotoError(null);
+    setPhotoError("");
     try {
-      // 사진이 있으면 먼저 올려 URL을 받는다(`POST /api/v1/images` → 그 다음 제보 생성).
-      // 선택한 사진이 있는데 업로드가 실패하면 사진을 모르게 빼지 않는다.
-      // 사진을 유지한 채 확인을 다시 누르면 재시도하고, 사용자가 사진을 삭제했을 때만
-      // 사진 없는 제보를 보낸다.
-      let photoUrl: string | undefined = photo?.uploadedImageUrl;
-      if (photo?.file && !photoUrl) {
-        const form = new FormData();
-        form.append("image", photo.file);
-        const uploaded = await uploadReportPhotoAction(form);
-        if (uploaded.status === "success") {
-          photoUrl = uploaded.imageUrl;
-          await saveReportPhoto(photo.file, photoUrl);
-          setPhoto((prev) => (prev ? { ...prev, uploadedImageUrl: photoUrl } : prev));
-        } else if (uploaded.status === "unauthorized") {
-          setSubmitError(uploaded.message);
-          return;
-        } else {
-          setPhotoError({ message: uploaded.message, retryUpload: true });
-          return;
-        }
-      }
-
       const result = await submitReportAction({
         itemId: selectedItemId,
         store,
@@ -346,7 +237,6 @@ export function ReportForm({
         price: Number(digitsOnly(price)),
         amount: Number(amount),
         unit: reportUnit,
-        photoUrl,
       });
       if (result.status === "success") {
         await clearReportPhoto();
@@ -355,18 +245,12 @@ export function ReportForm({
       }
       setSubmitError(result.message);
     } catch (error) {
-      // 원문을 화면에 옮기지 않는다(위 analyzePhoto와 같은 이유) — 콘솔에만 남긴다.
+      // 예기치 못한 원문은 화면에 옮기지 않고 콘솔에만 남긴다.
       console.error("[report] 제보 제출 실패", error);
       setSubmitError("제보를 등록하지 못했어요. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  function handleCancelScan() {
-    photoGenerationRef.current += 1;
-    setPhoto((prev) => (prev ? { ...prev, scanning: false } : prev));
-    setPhotoError(null);
   }
 
   return (
@@ -394,9 +278,8 @@ export function ReportForm({
                       aria-label="사진 삭제"
                       className="flex size-6 items-center justify-center rounded-full bg-surface-inverse"
                       onClick={() => {
-                        photoGenerationRef.current += 1;
                         setPhoto(null);
-                        setPhotoError(null);
+                        setPhotoError("");
                         void clearReportPhoto();
                       }}
                     >
@@ -417,10 +300,9 @@ export function ReportForm({
                     unoptimized
                     className="size-full object-cover"
                     onError={() => {
-                      photoGenerationRef.current += 1;
                       setPhoto(null);
                       void clearReportPhoto();
-                      setPhotoError({ message: PHOTO_MESSAGE.load, retryUpload: true });
+                      setPhotoError(PHOTO_MESSAGE.load);
                     }}
                   />
                 </PhotoPreview>
@@ -443,7 +325,7 @@ export function ReportForm({
               )}
               {photoError ? (
                 <p className="text-caption-12-medium text-content-error" role="alert">
-                  {photoError.message}
+                  {photoError}
                 </p>
               ) : null}
               <input
@@ -533,11 +415,15 @@ export function ReportForm({
           state={isSubmitting ? "loading" : "normal"}
           onClick={handleSubmit}
         >
-          {photo && photoError?.retryUpload ? "사진 다시 올리기" : "확인"}
+          확인
         </Button>
       </ReportCtaFooter>
 
-      {photo?.scanning ? <ScanModal onClose={handleCancelScan} /> : null}
+      {photo?.scanning ? (
+        <ScanModal
+          onClose={() => setPhoto((current) => (current ? { ...current, scanning: false } : current))}
+        />
+      ) : null}
     </>
   );
 }

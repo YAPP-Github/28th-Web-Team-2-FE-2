@@ -10,10 +10,8 @@ import { cn } from "@/app/_lib/cn";
 //          justify-center · px-[12px] py-[16px] · w-full
 //          → 높이 hug: 16 + 44(hint) + 12 + 38(버튼) + 16 = **126px** (XML 실측과 일치)
 //   hint   flex gap-[8px] items-start · w-[235px]
-//     아이콘  24×24 (별 2개 — 자동 입력을 암시하는 sparkle)
+//     아이콘  24×24 (별 2개 sparkle)
 //     문구    2줄 · 기본 body/14-medium · content/secondary
-//             1줄: "야채, 영수증 사진"(body/14-semibold · **#05a163** = content/brand/light) + "을 추가하면 "
-//             2줄: "품목과 가격"(body/14-semibold · **#262f3c** = content/primary) + "을 자동으로 입력해 드려요"
 //   버튼   px-[20px] py-[8px] gap-[4px] radius/md · body/14-semibold → 우리 `Button size="small"`과
 //          패딩·radius·타이포가 **정확히 일치**한다. 그래서 새로 만들지 않고 슬롯으로 받는다.
 //
