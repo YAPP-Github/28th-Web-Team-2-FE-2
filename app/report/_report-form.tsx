@@ -18,6 +18,7 @@ import {
 import { PhotoDropzone } from "./_components/photo-dropzone";
 import { PhotoPreview } from "./_components/photo-preview";
 import { ReportCtaFooter } from "./_components/report-cta-footer";
+import { ScanModal } from "./_components/scan-modal";
 import { clearReportPhoto, loadReportPhoto, saveReportPhoto } from "./_lib/photo-draft";
 
 // 실측 출처: 장보고 Design `d5j7K9BNpSXxVUu3fmZfY4` / `화면GUI(원본)` 364:6742 — 상세는 `app/report/page.tsx` 머리말.
@@ -39,8 +40,8 @@ import { clearReportPhoto, loadReportPhoto, saveReportPhoto } from "./_lib/photo
 //  4. 제목·라벨 고정 폭(179 · 358)을 버렸다. 한국어 텍스트에 고정 폭을 주면 실데이터에서 깨진다.
 //
 // ── Figma에 정의가 없어 코드가 정한 것 (전부 GUI피드백.md에 기록) ────────────────
-//  · 사진은 서버에 업로드하거나 인식하지 않고 브라우저 로컬 미리보기로만 보여준다.
-//    파일 로드가 실패하면 사진을 버리고 사용자가 다시 고를 수 있게 한다.
+//  · 사진은 서버에 업로드하거나 인식하지 않는다. 사진을 고르면 인식 대기 모달을 잠시 보여준 뒤
+//    브라우저 로컬 미리보기로 전환한다. 파일 로드가 실패하면 사진을 버리고 다시 고를 수 있게 한다.
 //  · 단위는 `kg`·`g`·`개`·`포기` 중 사용자가 선택해 제보한다.
 //  · CTA "확인"의 이동 대상이 명시돼 있지 않다 → F04-4 제보 완료로 보냈다(플로우상 유일한 전진 경로).
 //
@@ -84,7 +85,10 @@ export interface ReportFormProps {
 type PhotoState = {
   file: File;
   url: string;
+  scanning: boolean;
 } | null;
+
+const LOCAL_SCAN_DELAY_MS = 1_500;
 
 function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
@@ -163,6 +167,7 @@ export function ReportForm({
       setPhoto({
         file: file.file,
         url: URL.createObjectURL(file.file),
+        scanning: false,
       });
     });
     return () => {
@@ -177,6 +182,14 @@ export function ReportForm({
       if (url) URL.revokeObjectURL(url);
     };
   }, [photo?.url]);
+
+  useEffect(() => {
+    if (!photo?.scanning) return;
+    const timeoutId = window.setTimeout(() => {
+      setPhoto((current) => (current ? { ...current, scanning: false } : current));
+    }, LOCAL_SCAN_DELAY_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [photo?.scanning]);
 
   // Figma에 검증 규칙 정의가 없다(위 ⚠️). `shared/pages.md` F04-1이 "필수는 품목·가격·양"이라고
   // 적어 두었지만 **판매 장소도 포함시켰다** — "어디서 본 가격인가"가 이 플로우의 존재 이유이고,
@@ -197,7 +210,7 @@ export function ReportForm({
     event.target.value = "";
     if (!file) return;
     setPhotoError("");
-    setPhoto({ file, url: URL.createObjectURL(file) });
+    setPhoto({ file, url: URL.createObjectURL(file), scanning: true });
     void saveReportPhoto(file);
   }
 
@@ -398,13 +411,19 @@ export function ReportForm({
           leading={false}
           trailing={false}
           className="w-full"
-          disabled={!canSubmit || isSubmitting}
+          disabled={!canSubmit || isSubmitting || Boolean(photo?.scanning)}
           state={isSubmitting ? "loading" : "normal"}
           onClick={handleSubmit}
         >
           확인
         </Button>
       </ReportCtaFooter>
+
+      {photo?.scanning ? (
+        <ScanModal
+          onClose={() => setPhoto((current) => (current ? { ...current, scanning: false } : current))}
+        />
+      ) : null}
     </>
   );
 }
