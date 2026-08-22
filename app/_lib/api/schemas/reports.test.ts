@@ -43,6 +43,20 @@ describe("create report request schema", () => {
     ).toBe(true);
   });
 
+  it("사진 URL이 없는 제보 payload를 허용한다", () => {
+    const result = createReportRequestSchema.safeParse({
+      regionId: "1144010200",
+      reportType: "PURCHASE",
+      price: 3_000,
+      unit: "1kg",
+      amount: 1,
+      store: kakaoStore,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.photoUrl).toBeUndefined();
+  });
+
   it("잘못된 법정동 코드와 필수 가게 필드를 거부한다", () => {
     expect(
       createReportRequestSchema.safeParse({

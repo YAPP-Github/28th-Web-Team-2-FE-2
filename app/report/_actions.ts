@@ -2,18 +2,12 @@
 
 import { ApiError } from "@/app/_lib/api/api-error";
 import { clearTokens, getAccessToken } from "@/app/_lib/api/auth/session";
-import {
-  uploadImageValidationMessage,
-  validateUploadImage,
-} from "@/app/_lib/api/schemas/images";
 import type { Region } from "@/app/_lib/api/schemas/regions";
 import { createReportRequestSchema, type StoreRequest } from "@/app/_lib/api/schemas/reports";
-import { uploadImage } from "@/app/_lib/api/server/images";
 import { ensureCurrentUserRegion } from "@/app/_lib/api/server/regions";
 import { createReport } from "@/app/_lib/api/server/reports";
 import { getVerifiedSelectedRegion } from "@/app/_lib/api/server/selected-region";
 import { FIXED_REGION_ID } from "@/app/_lib/api/fixed-region";
-import { PHOTO_MESSAGE } from "@/app/_lib/report-photo-messages";
 
 /**
  * Figma에 "구매/목격" 토글이 없다(제보 폼 어디에도 이 값을 고르는 UI가 없음). 유일하게 UI가
@@ -40,69 +34,6 @@ export interface SubmitReportInput {
   amount: number;
   /** 폼에서 선택한 판매 단위(`kg`·`g`·`개`·`포기`). */
   unit: string;
-  /** `uploadReportPhotoAction`이 돌려준 S3 URL. 사진을 안 올렸으면 없다. */
-  photoUrl?: string;
-}
-
-export type UploadPhotoResult =
-  | { status: "success"; imageUrl: string }
-  | { status: "unauthorized"; message: string }
-  | { status: "invalid"; message: string }
-  | { status: "unavailable"; message: string }
-  | { status: "error"; message: string };
-
-/**
- * 제보 사진 업로드 — `POST /api/v1/images`.
- *
- * 제보 생성과 **분리된 두 단계**다(스펙이 그렇게 나뉘어 있다): 여기서 받은 `imageUrl`을
- * `submitReportAction`의 `photoUrl`로 넘긴다. 업로드가 실패하면 원본 파일을
- * 유지한 채 재시도하고, 사용자가 사진을 지웠을 때만 사진 없는 제보를 보낸다.
- *
- * 형식·용량은 Spring이 400을 주기 전에 여기서 먼저 거른다 — 왕복 한 번을 아끼고, 사용자가
- * 받는 문구가 "잘못된 요청"이 아니라 무엇이 문제인지가 된다.
- */
-export async function uploadReportPhotoAction(formData: FormData): Promise<UploadPhotoResult> {
-  const file = formData.get("image");
-  if (!(file instanceof File)) {
-    return { status: "invalid", message: "사진 파일을 찾지 못했어요. 다시 선택해 주세요." };
-  }
-  const validationError = validateUploadImage(file);
-  if (validationError) {
-    return { status: "invalid", message: uploadImageValidationMessage(validationError) };
-  }
-
-  const token = await getAccessToken();
-  if (!token) {
-    return { status: "unauthorized", message: "사진을 올리려면 카카오 로그인이 필요해요." };
-  }
-
-  try {
-    const imageUrl = await uploadImage({ file, token });
-    return { status: "success", imageUrl };
-  } catch (error) {
-    if (!(error instanceof ApiError)) throw error;
-
-    console.error("제보 사진 업로드 실패", {
-      kind: error.kind,
-      status: error.status,
-      endpoint: error.endpoint,
-    });
-
-    if (error.isAuthExpired || error.kind === "forbidden") {
-      await clearTokens();
-      return { status: "unauthorized", message: "로그인이 만료됐어요. 다시 로그인해 주세요." };
-    }
-    // 형식 오류(400)만 따로 안내한다 — 같은 파일로 재시도하면 같은 400이라, "다시 시도"는
-    // 사용자를 루프에 넣는다. 저장소 장애(503)와 그 밖의 실패는 할 일이 같아(재시도 또는
-    // 사진 삭제) 문구를 하나로 합쳤다.
-    if (error.kind === "badRequest") {
-      return { status: "invalid", message: PHOTO_MESSAGE.invalidFormat };
-    }
-    if (error.status === 503) {
-      return { status: "unavailable", message: PHOTO_MESSAGE.upload };
-    }
-    return { status: "error", message: PHOTO_MESSAGE.upload };
-  }
 }
 
 /**
@@ -155,9 +86,6 @@ export async function submitReportAction(input: SubmitReportInput): Promise<Subm
     amount: input.amount,
     storeId: input.storeId,
     store: input.store,
-    // 사진은 `uploadReportPhotoAction`이 먼저 올리고 그 결과 URL만 여기로 온다
-    // (2026-08-20 `POST /api/v1/images` 연결). 로컬 blob URL은 절대 넘기지 않는다.
-    photoUrl: input.photoUrl,
   });
   if (!body.success) {
     return { status: "invalid", message: "입력값을 확인해 주세요." };

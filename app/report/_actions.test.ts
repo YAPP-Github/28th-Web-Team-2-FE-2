@@ -49,5 +49,6 @@ describe("제보 제출 액션", () => {
       expect.objectContaining({ regionId: FIXED_REGION_ID, storeId: 7 }),
     );
     expect(request.body.store).toBeUndefined();
+    expect(request.body.photoUrl).toBeUndefined();
   });
 });
