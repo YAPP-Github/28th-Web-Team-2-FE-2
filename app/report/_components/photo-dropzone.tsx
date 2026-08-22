@@ -11,16 +11,17 @@ import { cn } from "@/app/_lib/cn";
 //          → 높이 hug: 16 + 44(hint) + 12 + 38(버튼) + 16 = **126px** (XML 실측과 일치)
 //   hint   flex gap-[8px] items-start · w-[235px]
 //     아이콘  24×24 (별 2개 sparkle)
-//     문구    사진을 서버로 보내지 않는 현재 동작에 맞춰 로컬 미리보기 안내로 바꿨다.
+//     문구    2줄 · 기본 body/14-medium · content/secondary
 //   버튼   px-[20px] py-[8px] gap-[4px] radius/md · body/14-semibold → 우리 `Button size="small"`과
 //          패딩·radius·타이포가 **정확히 일치**한다. 그래서 새로 만들지 않고 슬롯으로 받는다.
 //
 // sparkle 아이콘은 `public/figma/design-library/icons/sparkle.svg`를 사용한다.
 //
-// ⚠️ 문구 안 강조색이 raw hex다 — `#05a163`. `content/brand/light`와 같아서 토큰으로 옮겼다.
+// ⚠️ 문구 안 강조색이 raw hex다 — `#05a163`·`#262f3c`. 값은 각각 `content/brand/light`·
+//    `content/primary`와 같아서 토큰으로 옮겼다(변수 바인딩만 안 돼 있는 상태).
 //
-// 대비: content/secondary 4.79:1 · content/brand/light 3.95:1(14px 기준 4.5:1 **미달**).
-//       미달분은 Figma 원본 값이라 그대로 두고 기록만 한다.
+// 대비: content/secondary 4.79:1 · content/brand/light 3.95:1(14px 기준 4.5:1 **미달**) ·
+//       content/primary 13.51:1. 미달분은 Figma 원본 값이라 그대로 두고 기록만 한다.
 //       ※ 이 미달값은 `surface/secondary`(#f2f3f8) 배경 기준으로 다시 재면 더 낮아진다.
 
 export interface PhotoDropzoneProps {
@@ -48,7 +49,8 @@ export function PhotoDropzone({ icon, action, className }: PhotoDropzoneProps) {
           <span className="text-body-14-semibold text-content-brand-light">야채, 영수증 사진</span>
           을 추가하면
           <br />
-          기기 안에서 바로 미리볼 수 있어요
+          <span className="text-body-14-semibold text-content-primary">품목과 가격</span>을 자동으로
+          입력해 드려요
         </p>
       </div>
       {action}
